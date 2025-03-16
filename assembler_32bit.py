@@ -85,7 +85,7 @@ for function in labels:
             opcode = splited[0]
             if verbose: print(f"opcode (Calc len): {opcode}")
             opcode = instruct_dict[opcode]
-            code_bytes.append(0)
+            for i in range(3): code_bytes.append(0)
             code_bytes.append(opcode)
 
             data = splited[1]
@@ -102,13 +102,15 @@ for function in labels:
                 print(f"{data} is not valid in {labels[function]}")
 
             if verbose: print(f"data (Calc len): {data}")
+            code_bytes.append((4278190080 & value) >> 24)
+            code_bytes.append((16711680 & value) >> 16)
             code_bytes.append((65280 & data) >> 8)
             code_bytes.append(255 & data)
         elif len(splited) == 0 or splited[0] != "":
             opcode = splited[0]
             if verbose: print(f"opcode (Calc len): {opcode}")
             opcode = instruct_dict[opcode]
-            code_bytes.append(0)
+            for i in range(3): code_bytes.append(0)
             code_bytes.append(opcode)
     label_lengths[function] = len(code_bytes)
 
@@ -138,21 +140,27 @@ for function in labels:
             opcode = splited[0]
             if verbose: print(f"opcode (processing labels): {opcode}")
             opcode = instruct_dict[opcode]
-            code_bytes.append(0)
+            for i in range(3): code_bytes.append(0)
             code_bytes.append(opcode)
 
             data = splited[1]
             if data[0] == "#": # get value from decimal value (parameter is decimal)
                 data = int(data.replace("#", ""))
+                code_bytes.append((4278190080 & value) >> 24)
+                code_bytes.append((16711680 & value) >> 16)
                 code_bytes.append((65280 & data) >> 8)
                 code_bytes.append(255 & data)
             elif p1[0] == "$": # get value from hexadecimal value (parameter is hexadecimal)
                 data = int(data.replace("$", ""), 16)
+                code_bytes.append((4278190080 & value) >> 24)
+                code_bytes.append((16711680 & value) >> 16)
                 code_bytes.append((65280 & data) >> 8)
                 code_bytes.append(255 & data)
             elif data[0] == "!": # parameter is varaible
                 data = data[1:]
                 data = varibles[data]["var_num"] + total_function_len
+                code_bytes.append((4278190080 & value) >> 24)
+                code_bytes.append((16711680 & value) >> 16)
                 code_bytes.append((65280 & data) >> 8)
                 code_bytes.append(255 & data)
             elif data[0] == "@": # parameter is label
@@ -163,6 +171,8 @@ for function in labels:
                 else:
                     prev_fun = list(labels.keys())[label_num - 1]
                     data = (label_lengths[prev_fun] // 2) + 1
+                code_bytes.append((4278190080 & value) >> 16)
+                code_bytes.append((16711680 & value) >> 16)
                 code_bytes.append((65280 & data) >> 8)
                 code_bytes.append(255 & data)
             else:
@@ -200,6 +210,8 @@ for label in processed_labels:
 for var in varibles.keys():
     address = (varibles[var]['var_num'] * 2) + total_function_len
     value = varibles[var]['value']
+    output_code.append((4278190080 & value) >> 24)
+    output_code.append((16711680 & value) >> 16)
     output_code.append((65280 & value) >> 8)
     output_code.append(255 & value)
 
