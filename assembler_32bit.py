@@ -20,7 +20,7 @@ if verbose: print(instruct_dict)
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
 Assembled_file = os.path.join(dir_path, "assembly.txt")
-outputbin = os.path.join(dir_path, "output16.bin")
+outputbin = os.path.join(dir_path, "output32.bin")
 
 raw_assembly_file = open(Assembled_file, "r")
 raw_assembly_text = raw_assembly_file.read()
