@@ -1,0 +1,16 @@
+!result #10
+!result2 #11
+
+@main
+    LDA #69
+    LDB #69
+    ADD
+    STC !result
+    JMP @herro
+
+@herro
+    LDA #420
+    LDB #420
+    ADD
+    STC !result2
+    RET

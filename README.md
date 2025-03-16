@@ -1,6 +1,3 @@
-# CPU_dev
-Main Respository for Educational CPU Dev
+# MICA
+This is MICA its is a RISC ISA created for educational purposes with the utlimate goal of one day booting linux 
 
-## To Do
-- finish recompiler
-    1. implement variable name making. Makes a varaible name for every ram address that gets used (var_{ram_address})

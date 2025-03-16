@@ -1,0 +1,54 @@
+0000000000XXXXXX,YYYYYYYYYYYYYYYYYYYYYYYYYY
+
+XXXXXX => opcode
+YYYYYYYYYYYYYYYYYYYYYYYYYY => parameter
+
+(0) 000000 => NOP (no operation)
+(1) 000001 => LDA (read data from RAM location into register A) parameter: 16-bit RAM address
+(2) 000010 => LDB (read data from RAM location into register B) parameter: 16-bit RAM address
+(3) 000011 => LDC (load 2-bit value into register C) parameter: 2-bit value
+(4) 000100 => STA (write data from register A into RAM location) parameter: 16-bit RAM address
+(5) 000101 => STB (write data from register B into RAM location) parameter: 16-bit RAM address
+(6) 000110 => ADD (add register A and B)
+(7) 000111 => SUB (subtract register A and B)
+(8) 001000 => MUL (Multiple register A and B)
+(9) 001001=> DIV (Divide register A and B)
+(10)001010 => JMP parameter: 16-bit address
+(11)001011 => JMPN (jump to 16-bit address if negative flag set) parameter: 16-bit RAM address
+(12)001100 => JMPZ (jump to 16-bit address if zero flag set) parameter: 16-bit RAM address
+(13)001101 => JMPE (jump to 16-bit address if equal flag set) parameter: 16-bit RAM address
+(14)001110 => JMPG (jump to 16-bit address if greater than flag set) parameter: 16-bit RAM address
+(15)001111 => JMPL (jump to 16-bit address if less than flag set) parameter: 16-bit RAM address
+(16)010000 => CMP (compare two memory address and set appropriate flags) parameter 16-bit RAM address
+
+# FPU
+(14)001110 => FADD (add register A and B)
+(15)001111 => FSUB (subtract register A and B)
+(16)010000 => FMUL (Multiple register A and B)
+(17)010001 => FDIV (Divide register A and B)
+
+# Logic
+(18)010010 => SHR (Shift right register A)
+(19)010011 => SHL (Shift left register A)
+(20)010100 => AND (logical AND register A with register B)
+(21)010101 => OR (logical OR register A with register B)
+(22)010110 => NOT (logical NOT register A)
+(23)010111 => XOR (logical XOR register A with register B)
+(24)011000 => ZERO (zero register A)
+(39)100111 => NEG (negate register A)
+
+# Flags
+(29)011101 => SNF (Set negative flag)
+(30)011110 => SZF (Set zero flag)
+(31)011111 => SEF (Set equal to flag)
+(32)100000 => SGF (Set greater than flag)
+(33)100001 => SLF (Set less than flag)
+(34)100010 => CNF (clear negative flag)
+(35)100011 => CZF (clear zero flag)
+(36)100100 => CEF (clear equal to flag)
+(37)100101 => CGF (clear greater than flag)
+(38)100110 => CLF (clear less than flag)
+
+# Debug
+(62)111110 => OUT (Debug print function) parameter: 16-bit RAM address
+(63)111111 => HALT (halt computer)
