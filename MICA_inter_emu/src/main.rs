@@ -39,7 +39,7 @@ fn emu_16bit(){
 }
 
 fn emu_32bit(debug: bool){
-    let mut emu_ram_32bit: Vec<u8> = vec![0; MAX_32BIT_NUM as usize];
+    let mut emu_ram_32bit: Vec<u32> = vec![0; MAX_32BIT_NUM as usize];
     let mut emu_image_raw: Vec<u8> = vec![]; //vec![0; MAX_16BIT_NUM as usize]; 
     let mut emu_image_32bit: Vec<u32> = vec![];
 
@@ -79,52 +79,71 @@ fn emu_32bit(debug: bool){
 
     //stack 
     let mut emu_stack_pointer: usize = 0;
-    let mut emu_stack: [u32; STACK_SIZE] = [0; STACK_SIZE];
+    let mut emu_stack: [usize; STACK_SIZE] = [0; STACK_SIZE];
 
     while emu_running { 
         let current_opcode = emu_image_32bit[current_address]; 
-        if debug {println!("Current opcode: {}", current_opcode)};
+        //if debug {println!("Current opcode: {}", current_opcode)};
 
         match current_opcode {
             0 => {println!("NOP"); continue;}
             1 => {
                 if debug {println!("LDA")}
-                reg_a = emu_image_32bit[current_address];
+                let target_address = emu_image_32bit[current_address + 1] as usize;
+                reg_a = emu_image_32bit[target_address];
+                current_address += 2;
+                //println!("{}", current_address)
             }
             2 => {
                 if debug {println!("LDB")}
-                reg_b = emu_image_32bit[current_address];
+                let target_address = emu_image_32bit[current_address + 1] as usize;
+                reg_b = emu_image_32bit[target_address];
+                current_address += 2;
             }
             3 => {
                 if debug {println!("LDD")}
-                reg_d = emu_image_32bit[current_address];
+                let target_address = emu_image_32bit[current_address + 1] as usize;
+                reg_d = emu_image_32bit[target_address];
+                current_address += 2;
             }
             4 => {
                 if debug {println!("LDE")}
-                reg_e = emu_image_32bit[current_address];
+                let target_address = emu_image_32bit[current_address + 1] as usize;
+                reg_e = emu_image_32bit[target_address];
+                current_address += 2;
             }
             5 => {
                 if debug {println!("STA")}
-                emu_image_32bit[current_address] = reg_a;
+                let target_address = emu_image_32bit[current_address + 1] as usize;
+                emu_ram_32bit[target_address] = reg_a;
+                current_address += 2;
             }
             6 => {
                 if debug {println!("STB")}
-                emu_image_32bit[current_address] = reg_b;
+                let target_address = emu_image_32bit[current_address + 1] as usize;
+                emu_ram_32bit[target_address] = reg_b;
+                current_address += 2;
             }
             7 => {
                 if debug {println!("STC")}
-                emu_image_32bit[current_address] = reg_c;
+                let target_address = emu_image_32bit[current_address + 1] as usize;
+                emu_ram_32bit[target_address] = reg_c;
+                current_address += 2;
             }
             8 => {
                 if debug {println!("STD")}
-                emu_image_32bit[current_address] = reg_d;
+                let target_address = emu_image_32bit[current_address + 1] as usize;
+                emu_ram_32bit[target_address] = reg_d;
+                current_address += 2;
             }
             9 => {
                 if debug {println!("STE")}
-                emu_image_32bit[current_address] = reg_e;
+                let target_address = emu_image_32bit[current_address + 1] as usize;
+                emu_ram_32bit[target_address] = reg_e;
+                current_address += 2;
             }
             10 => {
-                if debug {println!("PSH")}
+                if debug {continue};//{println!("PSH")}
                 //emu_image_32bit[current_address] = reg_b;
             }
             11 => {
@@ -133,19 +152,20 @@ fn emu_32bit(debug: bool){
             }
             12 => {
                 if debug {println!("ADD")}
-                reg_c = reg_a + reg_b
+                reg_c = reg_a + reg_b;
+                current_address += 1
             }
             13 => {
                 if debug {println!("SUB")}
-                reg_c = reg_a - reg_b
+                reg_c = reg_a - reg_b;
             }
             14 => {
                 if debug {println!("MUL")}
-                reg_c = reg_a * reg_b
+                reg_c = reg_a * reg_b;
             }
             15 => {
                 if debug {println!("DIV")}
-                reg_c = reg_a / reg_b
+                reg_c = reg_a / reg_b;
             }
             16 => { //FADD
                 if debug {println!("FADD")}
@@ -165,9 +185,13 @@ fn emu_32bit(debug: bool){
             }
             20 => {
                 if debug {println!("JMP")}
+                let target_address = emu_image_32bit[current_address + 1] as usize;
+                emu_stack[emu_stack_pointer] = current_address;
+                emu_stack_pointer += 1;
+                current_address = target_address;
             }
             21 => {
-                if debug {println!("JMPE")}
+                if debug {continue}; //{println!("JMPE")}
             }
             22 => {
                 if debug {println!("JMPN")}
@@ -209,7 +233,10 @@ fn emu_32bit(debug: bool){
                 if debug {println!("NEG")}
             }
             35 => {
-                if debug {println!("NEG")}
+                if debug {println!("RET")}
+                emu_stack_pointer -= 1;
+                current_address = emu_stack[emu_stack_pointer] + 2;
+                println!("{}", current_address);
             }
             36 => {
                 emu_running = false;
@@ -221,7 +248,16 @@ fn emu_32bit(debug: bool){
             }
         }
 
-        current_address += 1;
+        //current_address += 1;
     }
     println!("Finished Emulation");
+
+    //output registers:
+    println!("rega: {}", reg_a);
+    println!("regb: {}", reg_b);
+    println!("regc: {}", reg_c);
+    println!("regd: {}", reg_d);
+    println!("rege: {}", reg_e);
+    println!("rege: {}", reg_e);
+    println!("ram 18: {}", emu_ram_32bit[18]);
 }
