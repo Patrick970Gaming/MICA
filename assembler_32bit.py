@@ -3,7 +3,7 @@ import os
 # Settings
 add_halt = True
 output_binary = True
-verbose = False
+verbose = True
 stack_size = 512
 debug_code_output_len = 50 # When it comes to outputting the byte array of the finished code this is how many bytes get displayed
 debug_code_output_start = 0 # Starting address of the above
@@ -85,7 +85,7 @@ for function in labels:
             opcode = splited[0]
             if verbose: print(f"opcode (Calc len): {opcode}")
             opcode = instruct_dict[opcode]
-            for i in range(3): code_bytes.append(0)
+            #for i in range(3): code_bytes.append(0)
             code_bytes.append(opcode)
 
             data = splited[1]
@@ -102,15 +102,18 @@ for function in labels:
                 print(f"{data} is not valid in {labels[function]}")
 
             if verbose: print(f"data (Calc len): {data}")
+            """
             code_bytes.append((4278190080 & value) >> 24)
             code_bytes.append((16711680 & value) >> 16)
             code_bytes.append((65280 & data) >> 8)
+            """
             code_bytes.append(255 & data)
+            
         elif len(splited) == 0 or splited[0] != "":
             opcode = splited[0]
             if verbose: print(f"opcode (Calc len): {opcode}")
             opcode = instruct_dict[opcode]
-            for i in range(3): code_bytes.append(0)
+            #for i in range(3): code_bytes.append(0)
             code_bytes.append(opcode)
     label_lengths[function] = len(code_bytes)
 
@@ -146,21 +149,37 @@ for function in labels:
             data = splited[1]
             if data[0] == "#": # get value from decimal value (parameter is decimal)
                 data = int(data.replace("#", ""))
-                code_bytes.append((4278190080 & value) >> 24)
-                code_bytes.append((16711680 & value) >> 16)
+                value = data
+                data = hash(str(value))
+                if data not in varibles.keys():
+                    previous_var = list(varibles.keys())[-1]
+                    varibles[data] = {"value": value, "var_num": varibles[previous_var]["var_num"] + 1}
+                    data = varibles[data]["var_num"] + total_function_len
+                else:
+                    data = varibles[data]["var_num"] + total_function_len
+                code_bytes.append((4278190080 & data) >> 24)
+                code_bytes.append((16711680 & data) >> 16)
                 code_bytes.append((65280 & data) >> 8)
                 code_bytes.append(255 & data)
             elif p1[0] == "$": # get value from hexadecimal value (parameter is hexadecimal)
                 data = int(data.replace("$", ""), 16)
-                code_bytes.append((4278190080 & value) >> 24)
-                code_bytes.append((16711680 & value) >> 16)
+                value = data
+                data = hash(str(value))
+                if data not in varibles.keys():
+                    previous_var = list(varibles.keys())[-1]
+                    varibles[data] = {"value": value, "var_num": varibles[previous_var]["var_num"] + 1}
+                    data = varibles[data]["var_num"] + total_function_len
+                else:
+                    data = varibles[data]["var_num"] + total_function_len
+                code_bytes.append((4278190080 & data) >> 24)
+                code_bytes.append((16711680 & data) >> 16)
                 code_bytes.append((65280 & data) >> 8)
                 code_bytes.append(255 & data)
             elif data[0] == "!": # parameter is varaible
                 data = data[1:]
                 data = varibles[data]["var_num"] + total_function_len
-                code_bytes.append((4278190080 & value) >> 24)
-                code_bytes.append((16711680 & value) >> 16)
+                code_bytes.append((4278190080 & data) >> 24)
+                code_bytes.append((16711680 & data) >> 16)
                 code_bytes.append((65280 & data) >> 8)
                 code_bytes.append(255 & data)
             elif data[0] == "@": # parameter is label
@@ -171,9 +190,9 @@ for function in labels:
                 else:
                     prev_fun = list(labels.keys())[label_num - 1]
                     print(label_lengths[prev_fun])
-                    data = (label_lengths[prev_fun] // 4)
-                code_bytes.append((4278190080 & value) >> 24)
-                code_bytes.append((16711680 & value) >> 16)
+                    data = label_lengths[prev_fun]
+                code_bytes.append((4278190080 & data) >> 24)
+                code_bytes.append((16711680 & data) >> 16)
                 code_bytes.append((65280 & data) >> 8)
                 code_bytes.append(255 & data)
             else:
@@ -219,6 +238,8 @@ for var in varibles.keys():
 if verbose:
     print(f"First {debug_code_output_len} bytes of code:")
     print(output_code[debug_code_output_start:(debug_code_output_start + debug_code_output_len)])
+
+print(varibles)
 
 if output_binary:
     f = open(outputbin, "wb")
