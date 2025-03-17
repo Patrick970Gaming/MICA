@@ -10,7 +10,7 @@ debug_code_output_start = 0 # Starting address of the above
 
 # Instruction dictonary 
 #instruction array, used to create insutrction dictonary
-instruct_array = ["NOP", "LDA", "LDB", "LDD", "STA", "STB", "STC", "STD", "PSH", "PLL", "ADD", "SUB", "MUL", "DIV", "FADD", "FSUB", "FMUL", "FDIV", "JMP", "JMPE", "JMPN", "JMPG", "JMPGU", "JMPL", "JMPLU", "CMP", "SHR", "SHL", "AND", "OR", "NOT", "XOR", "NEG", "RET", "HAL"] 
+instruct_array = ["NOP", "LDA", "LDB", "LDD", "LDE", "STA", "STB", "STC", "STD", "STE", "PSH", "PLL", "ADD", "SUB", "MUL", "DIV", "FADD", "FSUB", "FMUL", "FDIV", "JMP", "JMPE", "JMPN", "JMPG", "JMPGU", "JMPL", "JMPLU", "CMP", "SHR", "SHL", "AND", "OR", "NOT", "XOR", "NEG", "RET", "HAL"]
 
 instruct_dict = {}
 for i in range(len(instruct_array)):
