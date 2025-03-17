@@ -6,3 +6,8 @@ This is MICA its is a RISC ISA created for educational purposes with the utlimat
 * Create Interpreted Emulator
 * Create recompiled Emulator
 * Create FPGA "Emulator"
+
+## Architecture information
+### Instructions
+| Type | Number | OPCODE | Description |
+|------|--------|--------|-------------|
