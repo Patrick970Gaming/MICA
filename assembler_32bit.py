@@ -184,7 +184,7 @@ for function in labels:
             opcode = splited[0]
             if verbose: print(f"opcode (processing labels): {opcode}")
             opcode = instruct_dict[opcode]
-            code_bytes.append(0)
+            for i in range(3): code_bytes.append(0)
             code_bytes.append(opcode)
 
     processed_labels.append({function: {"code": code_bytes}})
