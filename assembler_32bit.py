@@ -3,7 +3,7 @@ import os
 # Settings
 add_halt = True
 output_binary = True
-verbose = True
+verbose = False
 stack_size = 512
 debug_code_output_len = 50 # When it comes to outputting the byte array of the finished code this is how many bytes get displayed
 debug_code_output_start = 0 # Starting address of the above
@@ -170,8 +170,9 @@ for function in labels:
                     data = label_num
                 else:
                     prev_fun = list(labels.keys())[label_num - 1]
-                    data = (label_lengths[prev_fun] // 2) + 1
-                code_bytes.append((4278190080 & value) >> 16)
+                    print(label_lengths[prev_fun])
+                    data = (label_lengths[prev_fun] // 4)
+                code_bytes.append((4278190080 & value) >> 24)
                 code_bytes.append((16711680 & value) >> 16)
                 code_bytes.append((65280 & data) >> 8)
                 code_bytes.append(255 & data)

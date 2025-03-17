@@ -1,9 +1,11 @@
 use std::fs::File;
 use std::io::Read;
 use std::io::BufReader;
+use std::ops::RemAssign;
 
 const  MAX_16BIT_NUM: u32 = 65_535;
 const  MAX_32BIT_NUM: u32 = 4_294_967_295;
+const  STACK_SIZE: usize = 512;
 
 fn main() {
     let mut emu_bit_depth = 32;
@@ -11,13 +13,14 @@ fn main() {
     let mut line = String::new();
     println!("Bit depth of emulation? (defualt 16): ");
     let b1 = std::io::stdin().read_line(&mut line).unwrap();
+    let mut is_debug = true;
 
     if emu_bit_depth == 16 {
         emu_16bit();
     }
 
     if emu_bit_depth == 32 {
-        emu_32bit();
+        emu_32bit(is_debug);
     }
 }
 
@@ -35,7 +38,7 @@ fn emu_16bit(){
     println!("{:?}", emu_image_16bit);
 }
 
-fn emu_32bit(){
+fn emu_32bit(debug: bool){
     let mut emu_ram_32bit: Vec<u8> = vec![0; MAX_32BIT_NUM as usize];
     let mut emu_image_raw: Vec<u8> = vec![]; //vec![0; MAX_16BIT_NUM as usize]; 
     let mut emu_image_32bit: Vec<u32> = vec![];
@@ -62,4 +65,163 @@ fn emu_32bit(){
     }
 
     println!("{:?}", emu_image_32bit);
+
+    println!("Starting Emulation");
+    let mut emu_running: bool = true;
+    let mut current_address: usize = 0;
+
+    //registers
+    let mut reg_a: u32 = 0;
+    let mut reg_b: u32 = 0;
+    let mut reg_c: u32 = 0;
+    let mut reg_d: u32 = 0;
+    let mut reg_e: u32 = 0;
+
+    //stack 
+    let mut emu_stack_pointer: usize = 0;
+    let mut emu_stack: [u32; STACK_SIZE] = [0; STACK_SIZE];
+
+    while emu_running { 
+        let current_opcode = emu_image_32bit[current_address]; 
+        if debug {println!("Current opcode: {}", current_opcode)};
+
+        match current_opcode {
+            0 => {println!("NOP"); continue;}
+            1 => {
+                if debug {println!("LDA")}
+                reg_a = emu_image_32bit[current_address];
+            }
+            2 => {
+                if debug {println!("LDB")}
+                reg_b = emu_image_32bit[current_address];
+            }
+            3 => {
+                if debug {println!("LDD")}
+                reg_d = emu_image_32bit[current_address];
+            }
+            4 => {
+                if debug {println!("LDE")}
+                reg_e = emu_image_32bit[current_address];
+            }
+            5 => {
+                if debug {println!("STA")}
+                emu_image_32bit[current_address] = reg_a;
+            }
+            6 => {
+                if debug {println!("STB")}
+                emu_image_32bit[current_address] = reg_b;
+            }
+            7 => {
+                if debug {println!("STC")}
+                emu_image_32bit[current_address] = reg_c;
+            }
+            8 => {
+                if debug {println!("STD")}
+                emu_image_32bit[current_address] = reg_d;
+            }
+            9 => {
+                if debug {println!("STE")}
+                emu_image_32bit[current_address] = reg_e;
+            }
+            10 => {
+                if debug {println!("PSH")}
+                //emu_image_32bit[current_address] = reg_b;
+            }
+            11 => {
+                if debug {println!("PLL")}
+                //emu_image_32bit[current_address] = reg_b;
+            }
+            12 => {
+                if debug {println!("ADD")}
+                reg_c = reg_a + reg_b
+            }
+            13 => {
+                if debug {println!("SUB")}
+                reg_c = reg_a - reg_b
+            }
+            14 => {
+                if debug {println!("MUL")}
+                reg_c = reg_a * reg_b
+            }
+            15 => {
+                if debug {println!("DIV")}
+                reg_c = reg_a / reg_b
+            }
+            16 => { //FADD
+                if debug {println!("FADD")}
+                //reg_c = reg_a + reg_b
+            }
+            17 => { //FSUB
+                if debug {println!("FSUB")}
+                //reg_c = reg_a + reg_b
+            }
+            18 => { //FMUL
+                if debug {println!("FMUL")}
+                //reg_c = reg_a + reg_b
+            }
+            19 => { //FDIV
+                if debug {println!("FDIV")}
+                //reg_c = reg_a + reg_b
+            }
+            20 => {
+                if debug {println!("JMP")}
+            }
+            21 => {
+                if debug {println!("JMPE")}
+            }
+            22 => {
+                if debug {println!("JMPN")}
+            }
+            23 => {
+                if debug {println!("JMPG")}
+            }
+            24 => {
+                if debug {println!("JMPGU")}
+            }
+            25 => {
+                if debug {println!("JMPL")}
+            }
+            26 => {
+                if debug {println!("JMPLU")}
+            }
+            27 => {
+                if debug {println!("CMP")}
+            }
+            28 => {
+                if debug {println!("SHR")}
+            }
+            29 => {
+                if debug {println!("SHL")}
+            }
+            30 => {
+                if debug {println!("AND")}
+            }
+            31 => {
+                if debug {println!("OR")}
+            }
+            32 => {
+                if debug {println!("NOT")}
+            }
+            33 => {
+                if debug {println!("XOR")}
+            }
+            34 => {
+                if debug {println!("NEG")}
+            }
+            35 => {
+                if debug {println!("NEG")}
+            }
+            36 => {
+                emu_running = false;
+                break;
+            }
+            _=> {
+                println!("ERROR insutrction not regocnised");
+                break;
+            }
+        }
+
+        current_address += 1;
+    }
+    println!("Finished Emulation");
 }
