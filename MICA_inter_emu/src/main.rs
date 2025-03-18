@@ -79,7 +79,7 @@ fn emu_32bit(debug: bool){
 
     //stack 
     let mut emu_stack_pointer: usize = 0;
-    let mut emu_stack: [usize; STACK_SIZE] = [0; STACK_SIZE];
+    let mut emu_stack: [u32; STACK_SIZE] = [0; STACK_SIZE];
 
     while emu_running { 
         let current_opcode = emu_image_32bit[current_address]; 
@@ -143,12 +143,16 @@ fn emu_32bit(debug: bool){
                 current_address += 2;
             }
             10 => {
-                if debug {continue};//{println!("PSH")}
-                //emu_image_32bit[current_address] = reg_b;
+                if debug {println!("PSH")}
+                emu_stack[emu_stack_pointer] = reg_a;
+                emu_stack_pointer += 1;
+                current_address += 1;
             }
             11 => {
                 if debug {println!("PLL")}
-                //emu_image_32bit[current_address] = reg_b;
+                reg_a = emu_stack[emu_stack_pointer];
+                emu_stack_pointer -= 1;
+                current_address += 1;
             }
             12 => {
                 if debug {println!("ADD")}
@@ -186,12 +190,12 @@ fn emu_32bit(debug: bool){
             20 => {
                 if debug {println!("JMP")}
                 let target_address = emu_image_32bit[current_address + 1] as usize;
-                emu_stack[emu_stack_pointer] = current_address;
+                emu_stack[emu_stack_pointer] = current_address as u32;
                 emu_stack_pointer += 1;
                 current_address = target_address;
             }
             21 => {
-                if debug {continue}; //{println!("JMPE")}
+                if debug {println!("JMPE")}
             }
             22 => {
                 if debug {println!("JMPN")}
@@ -235,10 +239,11 @@ fn emu_32bit(debug: bool){
             35 => {
                 if debug {println!("RET")}
                 emu_stack_pointer -= 1;
-                current_address = emu_stack[emu_stack_pointer] + 2;
+                current_address = (emu_stack[emu_stack_pointer] + 2) as usize;
                 println!("{}", current_address);
             }
             36 => {
+                if debug {println!("HALT")}
                 emu_running = false;
                 break;
             }
