@@ -1,14 +1,9 @@
 use serde_json::Value;
-use std::env;
-use std::fs;
 use std::fs::File;
 use std::io::BufReader;
 use std::io::Read;
-use std::ops::RemAssign;
-use std::path::Path;
-use std::{thread, time};
 
-const MAX_16BIT_NUM: u32 = 65_535;
+//const MAX_16BIT_NUM: u32 = 65_535;
 const MAX_32BIT_NUM: u32 = 4_294_967_295;
 const STACK_SIZE: usize = 512;
 
@@ -26,14 +21,6 @@ const INSTRUCTION_SET_FULL_I: &[&str] = &[
 ];
 
 fn main() {
-    let dir_path = env::current_exe()
-        .expect("Failed to get current executable path")
-        .canonicalize()
-        .expect("Failed to canonicalize capath")
-        .parent()
-        .expect("Failed to get parent directory")
-        .to_path_buf();
-
     // Read in config
     // let my_buf = BufReader::new(File::open("./output32.bin").unwrap());
     let config_file = File::open("./config.json").unwrap();
@@ -69,15 +56,18 @@ fn main() {
         .as_bool()
         .expect("verbose missing or not a boolean");
 
+    /*
     if emu_bitwidth == 16 {
         emu_16bit();
     }
+    */
 
     if emu_bitwidth == 32 {
         emu_32bit(is_debug);
     }
 }
 
+/*
 fn emu_16bit() {
     let mut emu_ram: Vec<u8> = vec![0; MAX_16BIT_NUM as usize];
     let mut emu_image_16bit: Vec<u8> = vec![];
@@ -91,6 +81,7 @@ fn emu_16bit() {
 
     println!("{:?}", emu_image_16bit);
 }
+*/
 
 fn emu_32bit(debug: bool) {
     let mut emu_ram_32bit: Vec<u32> = vec![0; MAX_32BIT_NUM as usize];
@@ -108,7 +99,7 @@ fn emu_32bit(debug: bool) {
     println!("{:?}", emu_image_raw);
     let length_32bit = emu_image_raw.len() / 4;
     let mut counter: usize = 0;
-    for i in 0..length_32bit {
+    for _i in 0..length_32bit {
         let sec1 = (emu_image_raw[counter] as u32) << 24;
         let sec2 = (emu_image_raw[counter + 1] as u32) << 16;
         let sec3 = (emu_image_raw[counter + 2] as u32) << 8;
@@ -121,7 +112,7 @@ fn emu_32bit(debug: bool) {
     println!("{:?}", emu_image_32bit);
 
     println!("Starting Emulation");
-    let mut emu_running: bool = true;
+    //let mut emu_running: bool = true;
     let mut current_address: usize = 0;
 
     //registers
@@ -135,7 +126,7 @@ fn emu_32bit(debug: bool) {
     let mut emu_stack_pointer: usize = 0;
     let mut emu_stack: [u32; STACK_SIZE] = [0; STACK_SIZE];
 
-    while emu_running {
+    loop {
         let current_opcode = emu_image_32bit[current_address];
         if debug {
             println!("Current opcode: {}", current_opcode)
@@ -333,11 +324,25 @@ fn emu_32bit(debug: bool) {
                 if debug {
                     println!("JMPE")
                 }
+                if reg_d == 1 {
+                    let target_address = emu_image_32bit[current_address + 1] as usize;
+                    emu_stack[emu_stack_pointer] = current_address as u32;
+                    emu_stack_pointer += 1;
+                    current_address = target_address;
+                } else {
+                };
             }
             26 => {
                 if debug {
                     println!("JMPN")
                 }
+                if reg_d == 2 {
+                    let target_address = emu_image_32bit[current_address + 1] as usize;
+                    emu_stack[emu_stack_pointer] = current_address as u32;
+                    emu_stack_pointer += 1;
+                    current_address = target_address;
+                } else {
+                };
             }
             27 => {
                 if debug {
@@ -365,44 +370,53 @@ fn emu_32bit(debug: bool) {
                 }
                 if reg_a == reg_b {
                     reg_d = 1; // set flag register to equals
-                } else if reg_a != reg_b {
-                    reg_d = 2;
+                } else if reg_a as i32 > reg_b as i32 {
+                    reg_d = 2; // set flag register to greater than (Signed)
+                } else if reg_a > reg_b {
+                    reg_d = 4; // set flag register to greater than (unsigned)
                 }
             }
             32 => {
                 if debug {
                     println!("SHR")
                 }
+                reg_c = reg_a >> 1
             }
             33 => {
                 if debug {
                     println!("SHL")
                 }
+                reg_c = reg_a << 1
             }
             34 => {
                 if debug {
                     println!("AND")
                 }
+                reg_c = reg_a & reg_b;
             }
             35 => {
                 if debug {
                     println!("OR")
                 }
+                reg_c = reg_a | reg_b;
             }
             36 => {
                 if debug {
                     println!("NOT")
                 }
+                reg_c = !reg_a;
             }
             37 => {
                 if debug {
                     println!("XOR")
                 }
+                reg_c = reg_a ^ reg_b;
             }
             38 => {
                 if debug {
                     println!("NEG")
                 }
+                reg_c = reg_a.wrapping_neg()
             }
             39 => {
                 if debug {
@@ -416,7 +430,7 @@ fn emu_32bit(debug: bool) {
                 if debug {
                     println!("HALT")
                 }
-                emu_running = false;
+                //emu_running = false;
                 break;
             }
             _ => {
