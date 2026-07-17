@@ -363,6 +363,11 @@ fn emu_32bit(debug: bool) {
                 if debug {
                     println!("CMP")
                 }
+                if reg_a == reg_b {
+                    reg_d = 1; // set flag register to equals
+                } else if reg_a != reg_b {
+                    reg_d = 2;
+                }
             }
             32 => {
                 if debug {
