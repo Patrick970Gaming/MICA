@@ -1,3 +1,4 @@
+from multiprocessing.sharedctypes import Value
 import os
 import json
 
@@ -79,12 +80,14 @@ varibles = {}
 
 for line_num in range(len(assembly_lines)):
     if assembly_lines[line_num][0] == "!":
+        value = 0 # sets defualt to 0 so if there is no value for varible defined it defaults to 0
         p1 = assembly_lines[line_num].replace("!", "").split(" ")
         name = p1[0]
         if p1[1][0] == "#": # get value from decimal value
             value = int(p1[1].replace("#", ""))
         elif p1[1][0] == "$": # get value from hexadecimal value
             value = int(p1[1].replace("$", ""), 16)
+
         varibles[name] = {"value": value, "var_num": num_vars}
         num_vars += 1
 
@@ -133,7 +136,7 @@ for function in labels:
             data = splited[1]
             if data[0] == "#": # get value from decimal value (parameter is decimal)
                 data = int(data.replace("#", ""))
-            elif p1[0] == "$": # get value from hexadecimal value (parameter is hexadecimal)
+            elif data[0] == "$": # get value from hexadecimal value (parameter is hexadecimal)
                 data = int(data.replace("$", ""), 16)
             elif data[0] == "!": # parameter is varaible
                 #data = data[1:]
@@ -166,6 +169,16 @@ for fun in label_lengths.keys():
     total_function_len += label_lengths[fun]
 
 if verbose: print(f"Total length of functions: {total_function_len}")
+
+# Precompute each label's starting word-offset as the sum of every
+# label's length that comes before it, in declaration order.
+label_offsets = {}
+running_offset = 0
+for name in labels:
+    label_offsets[name] = running_offset
+    running_offset += label_lengths[name]
+
+if verbose: print(f"Label offsets: {label_offsets}")
 
 output_code = list()
 
@@ -203,7 +216,7 @@ for function in labels:
                 code_bytes.append((16711680 & data) >> 16)
                 code_bytes.append((65280 & data) >> 8)
                 code_bytes.append(255 & data)
-            elif p1[0] == "$": # get value from hexadecimal value (parameter is hexadecimal)
+            elif data[0] == "$": # get value from hexadecimal value (parameter is hexadecimal)
                 data = int(data.replace("$", ""), 16)
                 value = data
                 data = hash(str(value))
@@ -226,13 +239,7 @@ for function in labels:
                 code_bytes.append(255 & data)
             elif data[0] == "@": # parameter is label
                 data = data[1:]
-                label_num = labels[data]["fun_num"]
-                if label_num == 0:
-                    data = label_num
-                else:
-                    prev_fun = list(labels.keys())[label_num - 1]
-                    print(label_lengths[prev_fun])
-                    data = label_lengths[prev_fun]
+                data = label_offsets[data]
                 code_bytes.append((4278190080 & data) >> 24)
                 code_bytes.append((16711680 & data) >> 16)
                 code_bytes.append((65280 & data) >> 8)
