@@ -288,28 +288,28 @@ fn emu_32bit(debug: bool) {
                 if debug {
                     println!("FADD")
                 }
-                //reg_c = reg_a + reg_b
+                reg_c = (reg_a as f32 + reg_b as f32) as u32
             }
             21 => {
                 //FSUB
                 if debug {
                     println!("FSUB")
                 }
-                //reg_c = reg_a + reg_b
+                reg_c = (reg_a as f32 - reg_b as f32) as u32
             }
             22 => {
                 //FMUL
                 if debug {
                     println!("FMUL")
                 }
-                //reg_c = reg_a + reg_b
+                reg_c = (reg_a as f32 * reg_b as f32) as u32
             }
             23 => {
                 //FDIV
                 if debug {
                     println!("FDIV")
                 }
-                //reg_c = reg_a + reg_b
+                reg_c = (reg_a as f32 / reg_b as f32) as u32
             }
             24 => {
                 if debug {
@@ -348,21 +348,49 @@ fn emu_32bit(debug: bool) {
                 if debug {
                     println!("JMPG")
                 }
+                if reg_d == 4 {
+                    let target_address = emu_image_32bit[current_address + 1] as usize;
+                    emu_stack[emu_stack_pointer] = current_address as u32;
+                    emu_stack_pointer += 1;
+                    current_address = target_address;
+                } else {
+                };
             }
             28 => {
                 if debug {
                     println!("JMPGU")
                 }
+                if reg_d == 8 {
+                    let target_address = emu_image_32bit[current_address + 1] as usize;
+                    emu_stack[emu_stack_pointer] = current_address as u32;
+                    emu_stack_pointer += 1;
+                    current_address = target_address;
+                } else {
+                };
             }
             29 => {
                 if debug {
                     println!("JMPL")
                 }
+                if reg_d == 16 {
+                    let target_address = emu_image_32bit[current_address + 1] as usize;
+                    emu_stack[emu_stack_pointer] = current_address as u32;
+                    emu_stack_pointer += 1;
+                    current_address = target_address;
+                } else {
+                };
             }
             30 => {
                 if debug {
                     println!("JMPLU")
                 }
+                if reg_d == 32 {
+                    let target_address = emu_image_32bit[current_address + 1] as usize;
+                    emu_stack[emu_stack_pointer] = current_address as u32;
+                    emu_stack_pointer += 1;
+                    current_address = target_address;
+                } else {
+                };
             }
             31 => {
                 if debug {
@@ -370,10 +398,16 @@ fn emu_32bit(debug: bool) {
                 }
                 if reg_a == reg_b {
                     reg_d = 1; // set flag register to equals
-                } else if reg_a as i32 > reg_b as i32 {
-                    reg_d = 2; // set flag register to greater than (Signed)
+                } else if reg_a != reg_b {
+                    reg_d = 2; // set flag register to not equal (Signed)
+                } else if (reg_a as i32) > (reg_b as i32) {
+                    reg_d = 4; // set flag register to greater than (signed)
                 } else if reg_a > reg_b {
-                    reg_d = 4; // set flag register to greater than (unsigned)
+                    reg_d = 8; // set flag register to greater than (unsigned)
+                } else if (reg_a as i32) < (reg_b as i32) {
+                    reg_d = 16; // set flag register to Less than (signed)
+                } else if reg_a < reg_b {
+                    reg_d = 32; // set flag register to less than (unsigned)
                 }
             }
             32 => {
