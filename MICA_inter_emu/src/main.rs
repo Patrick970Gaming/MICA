@@ -120,9 +120,6 @@ fn emu_32bit(debug: bool, ram_size: usize) {
     let mut emu_ram_32bit: Vec<u32> = vec![0; ram_size as usize];
     load_image_into_ram("./output32.bin", &mut emu_ram_32bit);
 
-    // Read in binary File and put it in "disk image"
-    let my_buf = BufReader::new(File::open("./output32.bin").unwrap());
-
     println!("Starting Emulation");
     //let mut emu_running: bool = true;
     let mut current_address: usize = 0;
