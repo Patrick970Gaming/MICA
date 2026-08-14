@@ -1,16 +1,17 @@
-!result #10
-!result2 #11
+!i #1
+!limit #6
+!sum #0
 
 @main
-    LDA #69
-    LDB #69
+    LDA !sum
+    LDB !i
     ADD
-    STC !result
-    JMP @herro
-
-@herro
-    LDA #420
-    LDB #420
+    STC !sum
+    LDA !i
+    LDB #1
     ADD
-    STC !result2
-    RET
+    STC !i
+    LDA !i
+    LDB !limit
+    CMP
+    JMPN @main

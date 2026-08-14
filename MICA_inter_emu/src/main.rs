@@ -369,10 +369,9 @@ fn emu_32bit(
                 }
                 if reg_d & 1 != 0 {
                     let target_address = emu_ram_32bit[current_address + 1] as usize;
-                    emu_stack[emu_stack_pointer] = current_address as u32;
-                    emu_stack_pointer += 1;
                     current_address = target_address;
                 } else {
+                    current_address += 2;
                 };
             }
             26 => {
@@ -381,10 +380,9 @@ fn emu_32bit(
                 }
                 if reg_d & 1 == 0 {
                     let target_address = emu_ram_32bit[current_address + 1] as usize;
-                    emu_stack[emu_stack_pointer] = current_address as u32;
-                    emu_stack_pointer += 1;
                     current_address = target_address;
                 } else {
+                    current_address += 2;
                 };
             }
             27 => {
@@ -393,10 +391,9 @@ fn emu_32bit(
                 }
                 if reg_d & 2 != 0 {
                     let target_address = emu_ram_32bit[current_address + 1] as usize;
-                    emu_stack[emu_stack_pointer] = current_address as u32;
-                    emu_stack_pointer += 1;
                     current_address = target_address;
                 } else {
+                    current_address += 2;
                 };
             }
             28 => {
@@ -405,10 +402,9 @@ fn emu_32bit(
                 }
                 if reg_d & 8 != 0 {
                     let target_address = emu_ram_32bit[current_address + 1] as usize;
-                    emu_stack[emu_stack_pointer] = current_address as u32;
-                    emu_stack_pointer += 1;
                     current_address = target_address;
                 } else {
+                    current_address += 2;
                 };
             }
             29 => {
@@ -417,10 +413,9 @@ fn emu_32bit(
                 }
                 if reg_d & 4 != 0 {
                     let target_address = emu_ram_32bit[current_address + 1] as usize;
-                    emu_stack[emu_stack_pointer] = current_address as u32;
-                    emu_stack_pointer += 1;
                     current_address = target_address;
                 } else {
+                    current_address += 2;
                 };
             }
             30 => {
@@ -429,10 +424,9 @@ fn emu_32bit(
                 }
                 if reg_d & 16 != 0 {
                     let target_address = emu_ram_32bit[current_address + 1] as usize;
-                    emu_stack[emu_stack_pointer] = current_address as u32;
-                    emu_stack_pointer += 1;
                     current_address = target_address;
                 } else {
+                    current_address += 2;
                 };
             }
             31 => {
