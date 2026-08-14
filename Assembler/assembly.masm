@@ -1,17 +1,21 @@
-!i #1
-!limit #6
-!sum #0
+!a #0
+!b #1
+!f #0
+!count #0
+!limit #10
 
 @main
-    LDA !sum
-    LDB !i
+    LDA !a
+    LDB !b
     ADD
-    STC !sum
-    LDA !i
+    STC !f
+    STB !a
+    STC !b
+    LDA !count
     LDB #1
     ADD
-    STC !i
-    LDA !i
+    STC !count
+    LDA !count
     LDB !limit
     CMP
     JMPN @main
