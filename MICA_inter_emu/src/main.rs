@@ -59,6 +59,17 @@ fn main() {
         .as_bool()
         .expect("verbose missing or not a boolean");
 
+    let memory_dump_enabled = read_config["memory_dump_enabled"]
+        .as_bool()
+        .expect("memory_dump_enabled missing or not a bool");
+
+    let memory_dump_start: u64 = read_config["memory_dump_start"]
+        .as_u64()
+        .expect("memory_dump_start missing or not an integer");
+
+    let memory_dump_length: u64 = read_config["memory_dump_length"]
+        .as_u64()
+        .expect("memory_dump_start missing or not an integer");
     /*
     if emu_bitwidth == 16 {
         emu_16bit();
@@ -66,7 +77,13 @@ fn main() {
     */
 
     if emu_bitwidth == 32 {
-        emu_32bit(is_debug, ram_size as usize);
+        emu_32bit(
+            is_debug,
+            ram_size as usize,
+            memory_dump_enabled,
+            memory_dump_start as usize,
+            memory_dump_length as usize,
+        );
     }
 }
 
@@ -116,7 +133,13 @@ fn load_image_into_ram(path: &str, ram: &mut [u32]) {
     println!("{:?}", ram);
 }
 
-fn emu_32bit(debug: bool, ram_size: usize) {
+fn emu_32bit(
+    debug: bool,
+    ram_size: usize,
+    memory_dump_enabled: bool,
+    memory_dump_start: usize,
+    memory_dump_length: usize,
+) {
     let mut emu_ram_32bit: Vec<u32> = vec![0; ram_size as usize];
     load_image_into_ram("./output32.bin", &mut emu_ram_32bit);
 
@@ -508,6 +531,14 @@ fn emu_32bit(debug: bool, ram_size: usize) {
     }
     println!("Finished Emulation");
 
+    if memory_dump_enabled {
+        let dump_end = (memory_dump_start + memory_dump_length).min(emu_ram_32bit.len());
+        println!("Memory dump [{}..{}]:", memory_dump_start, dump_end);
+        for addr in memory_dump_start..dump_end {
+            println!("  [{}] = {}", addr, emu_ram_32bit[addr]);
+        }
+    }
+
     //output registers:
     println!("rega: {}", reg_a);
     println!("regb: {}", reg_b);
@@ -515,5 +546,4 @@ fn emu_32bit(debug: bool, ram_size: usize) {
     println!("regd: {}", reg_d);
     println!("rege: {}", reg_e);
     println!("rege: {}", reg_e);
-    println!("ram 18: {}", emu_ram_32bit[18]);
 }
