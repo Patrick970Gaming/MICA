@@ -257,8 +257,8 @@ fn emu_32bit(debug: bool, ram_size: usize) {
                 if debug {
                     println!("PLL")
                 }
-                reg_a = emu_stack[emu_stack_pointer];
                 emu_stack_pointer -= 1;
+                reg_a = emu_stack[emu_stack_pointer];
                 current_address += 1;
             }
             16 => {
