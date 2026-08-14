@@ -33,6 +33,9 @@ fn main() {
         serde_json::to_string_pretty(&read_config).expect("Failed to serialize config")
     );
 
+    let ram_size: u64 = read_config["ram_size"]
+        .as_u64()
+        .expect("ram_size missing or not an integer");
     // Reads in config
     let emu_bitwidth: u64 = read_config["bit_width"]
         .as_u64()
@@ -63,7 +66,7 @@ fn main() {
     */
 
     if emu_bitwidth == 32 {
-        emu_32bit(is_debug);
+        emu_32bit(is_debug, ram_size as usize);
     }
 }
 
@@ -83,8 +86,8 @@ fn emu_16bit() {
 }
 */
 
-fn emu_32bit(debug: bool) {
-    let mut emu_ram_32bit: Vec<u32> = vec![0; MAX_32BIT_NUM as usize];
+fn emu_32bit(debug: bool, ram_size: usize) {
+    let mut emu_ram_32bit: Vec<u32> = vec![0; ram_size as usize];
     let mut emu_image_raw: Vec<u8> = vec![]; //vec![0; MAX_16BIT_NUM as usize];
     let mut emu_image_32bit: Vec<u32> = vec![];
 
