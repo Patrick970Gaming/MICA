@@ -335,7 +335,7 @@ fn emu_32bit(debug: bool) {
                 if debug {
                     println!("JMPE")
                 }
-                if reg_d == 1 {
+                if reg_d & 1 != 0 {
                     let target_address = emu_image_32bit[current_address + 1] as usize;
                     emu_stack[emu_stack_pointer] = current_address as u32;
                     emu_stack_pointer += 1;
@@ -347,7 +347,7 @@ fn emu_32bit(debug: bool) {
                 if debug {
                     println!("JMPN")
                 }
-                if reg_d == 2 {
+                if reg_d & 1 == 0 {
                     let target_address = emu_image_32bit[current_address + 1] as usize;
                     emu_stack[emu_stack_pointer] = current_address as u32;
                     emu_stack_pointer += 1;
@@ -359,7 +359,7 @@ fn emu_32bit(debug: bool) {
                 if debug {
                     println!("JMPG")
                 }
-                if reg_d == 4 {
+                if reg_d & 2 != 0 {
                     let target_address = emu_image_32bit[current_address + 1] as usize;
                     emu_stack[emu_stack_pointer] = current_address as u32;
                     emu_stack_pointer += 1;
@@ -371,7 +371,7 @@ fn emu_32bit(debug: bool) {
                 if debug {
                     println!("JMPGU")
                 }
-                if reg_d == 8 {
+                if reg_d & 8 != 0 {
                     let target_address = emu_image_32bit[current_address + 1] as usize;
                     emu_stack[emu_stack_pointer] = current_address as u32;
                     emu_stack_pointer += 1;
@@ -383,7 +383,7 @@ fn emu_32bit(debug: bool) {
                 if debug {
                     println!("JMPL")
                 }
-                if reg_d == 16 {
+                if reg_d & 4 != 0 {
                     let target_address = emu_image_32bit[current_address + 1] as usize;
                     emu_stack[emu_stack_pointer] = current_address as u32;
                     emu_stack_pointer += 1;
@@ -395,7 +395,7 @@ fn emu_32bit(debug: bool) {
                 if debug {
                     println!("JMPLU")
                 }
-                if reg_d == 32 {
+                if reg_d & 16 != 0 {
                     let target_address = emu_image_32bit[current_address + 1] as usize;
                     emu_stack[emu_stack_pointer] = current_address as u32;
                     emu_stack_pointer += 1;
@@ -407,61 +407,72 @@ fn emu_32bit(debug: bool) {
                 if debug {
                     println!("CMP")
                 }
+                let mut flags: u32 = 0;
                 if reg_a == reg_b {
-                    reg_d = 1; // set flag register to equals
-                } else if reg_a != reg_b {
-                    reg_d = 2; // set flag register to not equal (Signed)
-                } else if (reg_a as i32) > (reg_b as i32) {
-                    reg_d = 4; // set flag register to greater than (signed)
-                } else if reg_a > reg_b {
-                    reg_d = 8; // set flag register to greater than (unsigned)
-                } else if (reg_a as i32) < (reg_b as i32) {
-                    reg_d = 16; // set flag register to Less than (signed)
-                } else if reg_a < reg_b {
-                    reg_d = 32; // set flag register to less than (unsigned)
+                    flags |= 1; // EQ
+                } else {
+                    if (reg_a as i32) > (reg_b as i32) {
+                        flags |= 2;
+                    } else {
+                        flags |= 4;
+                    } // signed GT / LT
+                    if reg_a > reg_b {
+                        flags |= 8;
+                    } else {
+                        flags |= 16;
+                    } // unsigned GT / LT
                 }
+                reg_d = flags;
+                current_address += 1;
             }
             32 => {
                 if debug {
                     println!("SHR")
                 }
-                reg_c = reg_a >> 1
+                reg_c = reg_a >> 1;
+                current_address += 1;
             }
             33 => {
                 if debug {
                     println!("SHL")
                 }
-                reg_c = reg_a << 1
+                reg_c = reg_a << 1;
+                current_address += 1;
             }
             34 => {
                 if debug {
                     println!("AND")
                 }
                 reg_c = reg_a & reg_b;
+                current_address += 1;
             }
             35 => {
                 if debug {
                     println!("OR")
                 }
                 reg_c = reg_a | reg_b;
+                current_address += 1;
             }
             36 => {
                 if debug {
                     println!("NOT")
                 }
                 reg_c = !reg_a;
+                current_address += 1;
             }
             37 => {
                 if debug {
                     println!("XOR")
                 }
                 reg_c = reg_a ^ reg_b;
+                current_address += 1;
             }
             38 => {
                 if debug {
                     println!("NEG")
                 }
-                reg_c = reg_a.wrapping_neg()
+                reg_c = reg_a.wrapping_neg();
+                current_address += 1;
             }
             39 => {
                 if debug {
