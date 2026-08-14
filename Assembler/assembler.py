@@ -269,14 +269,14 @@ if verbose: print(f"Process_labels: {processed_labels}")
 # Add functions to the image:
 
 for fun_counter, label in enumerate(processed_labels):
+    label_name = next(iter(label.keys()))
     if fun_counter == 0:
-        label_name = [label.keys()][0]
         start_address = labels[label_name]["fun_num"]
     if fun_counter > 0:
         start_address = label_lengths[list(label_lengths.keys())[fun_counter - 1]]
 
-    code = label[[label.keys()][0]]["code"]
-    if verbose: print(f"Code of {[label.keys()][0]}: {code}")
+    code = label[label_name]["code"]
+    if verbose: print(f"Code of {label_name}: {code}")
     for code_index in range(len(code)):
         output_code.append(code[code_index])
 
