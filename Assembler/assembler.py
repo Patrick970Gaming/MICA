@@ -1,6 +1,8 @@
 import json
 import os
+import struct
 from typing import TypedDict
+
 
 # Settings
 add_halt = True
@@ -26,6 +28,16 @@ instruction_set_fullI = ["NOP", "LDA", "LDAI", "LDB", "LDBI", "LDD", "LDE", "STA
 # Tool functions
 def is_power_of_two(n: int) -> bool:
     return n > 0 and n.bit_count() == 1
+
+def parse_decimal_literal(token: str) -> int:
+    """Parses a '#'-prefixed decimal literal into the raw 32-bit
+    pattern that should be stored/loaded. Integers pass through
+    as-is; anything with a decimal point is packed as an IEEE-754
+    float bit pattern so FADD/FSUB/FMUL/FDIV can operate on it."""
+    text = token.replace("#", "")
+    if "." in text:
+        return struct.unpack(">I", struct.pack(">f", float(text)))[0]
+    return int(text)
 
 # Read in config file
 # Open and parse the JSON file
@@ -86,7 +98,7 @@ for line_num in range(len(assembly_lines)):
         p1 = assembly_lines[line_num].replace("!", "").split(" ")
         name = p1[0]
         if p1[1][0] == "#": # get value from decimal value
-            value = int(p1[1].replace("#", ""))
+            value = parse_decimal_literal(p1[1])
         elif p1[1][0] == "$": # get value from hexadecimal value
             value = int(p1[1].replace("$", ""), 16)
 
@@ -142,7 +154,7 @@ for function in labels:
 
             data = splited[1]
             if data[0] == "#": # get value from decimal value (parameter is decimal)
-                data = int(data.replace("#", ""))
+                data = parse_decimal_literal(data)
             elif data[0] == "$": # get value from hexadecimal value (parameter is hexadecimal)
                 data = int(data.replace("$", ""), 16)
             elif data[0] == "!": # parameter is varaible
@@ -210,7 +222,7 @@ for function in labels:
 
             data = splited[1]
             if data[0] == "#": # get value from decimal value (parameter is decimal)
-                data = int(data.replace("#", ""))
+                data = parse_decimal_literal(data)
                 value = data
                 data = hash(str(value))
                 if data not in varibles:
