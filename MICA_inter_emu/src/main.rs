@@ -270,46 +270,57 @@ fn emu_32bit(debug: bool) {
                     println!("SUB")
                 }
                 reg_c = reg_a - reg_b;
+                current_address += 1;
             }
             18 => {
                 if debug {
                     println!("MUL")
                 }
                 reg_c = reg_a * reg_b;
+                current_address += 1;
             }
             19 => {
                 if debug {
                     println!("DIV")
                 }
                 reg_c = reg_a / reg_b;
+                current_address += 1;
             }
             20 => {
                 //FADD
                 if debug {
                     println!("FADD")
                 }
-                reg_c = (reg_a as f32 + reg_b as f32) as u32
+                let result = f32::from_bits(reg_a) + f32::from_bits(reg_b);
+                reg_c = result.to_bits();
+                current_address += 1;
             }
             21 => {
                 //FSUB
                 if debug {
                     println!("FSUB")
                 }
-                reg_c = (reg_a as f32 - reg_b as f32) as u32
+                let result = f32::from_bits(reg_a) - f32::from_bits(reg_b);
+                reg_c = result.to_bits();
+                current_address += 1;
             }
             22 => {
                 //FMUL
                 if debug {
                     println!("FMUL")
                 }
-                reg_c = (reg_a as f32 * reg_b as f32) as u32
+                let result = f32::from_bits(reg_a) * f32::from_bits(reg_b);
+                reg_c = result.to_bits();
+                current_address += 1;
             }
             23 => {
                 //FDIV
                 if debug {
                     println!("FDIV")
                 }
-                reg_c = (reg_a as f32 / reg_b as f32) as u32
+                let result = f32::from_bits(reg_a) / f32::from_bits(reg_b);
+                reg_c = result.to_bits();
+                current_address += 1;
             }
             24 => {
                 if debug {
