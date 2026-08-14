@@ -2,3 +2,4 @@
 ~$Architecture.xlsx
 MICA_inter_emu/target/
 *.ods#
+.~lock.*#
