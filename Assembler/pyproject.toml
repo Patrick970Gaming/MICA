@@ -1,0 +1,5 @@
+[tool.basedpyright]
+reportAny = false
+reportUnknownArgumentType = false
+reportUnknownMemberType = false
+reportUnknownVariableType = false

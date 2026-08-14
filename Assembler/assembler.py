@@ -1,6 +1,6 @@
-from multiprocessing.sharedctypes import Value
-import os
 import json
+import os
+from typing import TypedDict
 
 # Settings
 add_halt = True
@@ -41,6 +41,8 @@ if not is_power_of_two(bitwidth):
     raise ValueError("Configured bit width is not a power of two")
 
 instruction_standard = read_config["instruction_set_standard"]
+
+instruct_array: list[str]
 if instruction_standard == "full":
     instruct_array = instruction_set_full
 elif instruction_standard == "full_int":
@@ -51,22 +53,22 @@ else:
 verbose = read_config["verbose"]
 
 
-instruct_dict = {}
+instruct_dict: dict[str, int]  = {}
 for i in range(len(instruct_array)):
     instruct_dict[instruct_array[i]] = i
 
-if verbose: print(instruct_dict)
+if verbose: print(f"intrsut_dict: {instruct_dict}")
 
 Assembled_file = os.path.join(dir_path, "assembly.masm")
 outputbin = os.path.join(dir_path, f"output{bitwidth}.bin")
 
 try:
-    raw_assembly_file = open(Assembled_file, "r")
-except:
+    with open(Assembled_file, "r") as file:
+        raw_assembly_file = file.read()
+except FileNotFoundError:
     raise ValueError("Could not find assembly.masm")
 
-raw_assembly_text = raw_assembly_file.read()
-assembly_lines = raw_assembly_text.split("\n")
+assembly_lines = raw_assembly_file.split("\n")
 
 
 # remove empty lines from assembly lines
@@ -92,13 +94,18 @@ for line_num in range(len(assembly_lines)):
         num_vars += 1
 
 # Process labels/functions and store into a dictonary
+class LabelEntry(TypedDict):
+    fun_num: int
+    code: list[str]
+
+
 num_lables = 0
-labels = {}
+labels: dict[str, LabelEntry] = {}
 
 for line_num in range(len(assembly_lines)):
     if assembly_lines[line_num][0] == "@":
         name = assembly_lines[line_num].replace("@", "")
-        code = []
+        code: list[str] = []
         for i in range(line_num + 1, len(assembly_lines)):
             if assembly_lines[i][0] not in ["@"]:
                 code.append(assembly_lines[i].replace("\t", ""))
@@ -119,7 +126,7 @@ label_lengths = {}
 # calc length of labels
 for function in labels:
     code = labels[function]['code']
-    code_bytes = []
+    code_bytes: list[int] = []
     for line in code:
         if line[:4] == "    ":
             splited = line[4:].split(" ")
@@ -144,7 +151,7 @@ for function in labels:
             elif data[0] == "@": # parameter is label
                 data = 0
             else:
-                print(f"{data} is not valid in {labels[function]}")
+                raise ValueError(f"{data} is not valid in {labels[function]}")
 
             if verbose: print(f"data (Calc len): {data}")
             """
@@ -165,7 +172,7 @@ for function in labels:
 if verbose: print(f"Label lenths: {label_lengths}")
 
 total_function_len = 0
-for fun in label_lengths.keys():
+for fun in label_lengths:
     total_function_len += label_lengths[fun]
 
 if verbose: print(f"Total length of functions: {total_function_len}")
@@ -180,7 +187,7 @@ for name in labels:
 
 if verbose: print(f"Label offsets: {label_offsets}")
 
-output_code = list()
+output_code = []
 
 # porcess labelsas
 processed_labels = []
@@ -206,7 +213,7 @@ for function in labels:
                 data = int(data.replace("#", ""))
                 value = data
                 data = hash(str(value))
-                if data not in varibles.keys():
+                if data not in varibles:
                     previous_var = list(varibles.keys())[-1]
                     varibles[data] = {"value": value, "var_num": varibles[previous_var]["var_num"] + 1}
                     data = varibles[data]["var_num"] + total_function_len
@@ -220,7 +227,7 @@ for function in labels:
                 data = int(data.replace("$", ""), 16)
                 value = data
                 data = hash(str(value))
-                if data not in varibles.keys():
+                if data not in varibles:
                     previous_var = list(varibles.keys())[-1]
                     varibles[data] = {"value": value, "var_num": varibles[previous_var]["var_num"] + 1}
                     data = varibles[data]["var_num"] + total_function_len
@@ -260,23 +267,21 @@ for function in labels:
 if verbose: print(f"Process_labels: {processed_labels}")
 
 # Add functions to the image:
-fun_counter = 0
-for label in processed_labels:
+
+for fun_counter, label in enumerate(processed_labels):
     if fun_counter == 0:
-        label_name = list(label.keys())[0]
+        label_name = [label.keys()][0]
         start_address = labels[label_name]["fun_num"]
     if fun_counter > 0:
         start_address = label_lengths[list(label_lengths.keys())[fun_counter - 1]]
 
-    code = label[list(label.keys())[0]]["code"]
-    if verbose: print(f"Code of {list(label.keys())[0]}: {code}")
+    code = label[[label.keys()][0]]["code"]
+    if verbose: print(f"Code of {[label.keys()][0]}: {code}")
     for code_index in range(len(code)):
         output_code.append(code[code_index])
 
-    fun_counter += 1
-
 # Add varaible refernces to the image:
-for var in varibles.keys():
+for var in varibles:
     address = (varibles[var]['var_num'] * 2) + total_function_len
     value = varibles[var]['value']
     output_code.append((4278190080 & value) >> 24)
@@ -291,6 +296,6 @@ if verbose:
 print(varibles)
 
 if output_binary:
-    f = open(outputbin, "wb")
-    f.write(bytearray(output_code))
-    f.close()
+    with open(outputbin, "wb") as f:
+        _ = f.write(bytearray(output_code))
+        f.close()
