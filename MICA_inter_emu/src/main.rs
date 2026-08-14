@@ -154,7 +154,7 @@ fn emu_32bit(debug: bool, ram_size: usize) {
                     println!("LDAI")
                 }
                 let target_address = reg_a as usize;
-                reg_b = emu_image_32bit[target_address];
+                reg_a = emu_image_32bit[target_address];
                 current_address += 2;
             }
             3 => {
