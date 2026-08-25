@@ -586,11 +586,11 @@ fn emu_32bit(
             }
             47 => {
                 if debug {
-                    println!("RET")
+                    println!("RET");
+                    println!("{}", current_address);
                 }
                 emu_stack_pointer -= 1;
                 current_address = (emu_stack[emu_stack_pointer] + 2) as usize;
-                println!("{}", current_address);
             }
             48 => {
                 if debug {
