@@ -17,12 +17,14 @@ dir_path = os.path.dirname(os.path.realpath(__file__))
 
 instruction_set_full = [
     "NOP",     "LDA",     "LDAI",     "LDB",     "LDBI",     "LDD",     "LDE",     "STA",     "STAI",     "STB",     "STBI",     "STC",     "STD",     "STE",     "PSH",     "PLL",
-    "ADD",     "SUB",     "MUL",     "DIV",     "FADD",     "FSUB",     "FMUL",     "FDIV",     "JMP",     "JMPE",     "JMPN",     "JMPG",     "JMPGU",     "JMPL",     "JMPLU",     "CMP",
+    "ADD",     "SUB",     "MUL",     "DIV",     "FADD",     "FSUB",     "FMUL",     "FDIV",     "JMP",     "JMPE",     "JMPN",     "JMPG",     "JMPGU",     "JMPL",     "JMPLU",
+    "JMPI",     "JMPEI",     "JMPNI",     "JMPGI",     "JMPGUI",     "JMPLI",     "JMPLUI",     "CMP",
     "SHR",     "SHL",     "AND",     "OR",     "NOT",     "XOR",     "NEG",     "RET",     "HAL"
 ]
 
 instruction_set_fullI = ["NOP", "LDA", "LDAI", "LDB", "LDBI", "LDD", "LDE", "STA", "STAI", "STB", "STBI", "STC", "STD", "STE", "PSH", "PLL",
-    "ADD", "SUB", "MUL", "DIV", "JMP", "JMPE", "JMPN", "JMPG", "JMPGU", "JMPL", "JMPLU", "CMP", "SHR", "SHL", "AND", "OR", "NOT", "XOR",
+    "ADD", "SUB", "MUL", "DIV", "JMP", "JMPE", "JMPN", "JMPG", "JMPGU", "JMPL", "JMPLU",
+    "JMPI", "JMPEI", "JMPNI", "JMPGI", "JMPGUI", "JMPLI", "JMPLUI", "CMP", "SHR", "SHL", "AND", "OR", "NOT", "XOR",
     "NEG", "RET", "HAL"]
 
 # Tool functions

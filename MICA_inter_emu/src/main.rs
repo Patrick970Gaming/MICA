@@ -10,14 +10,15 @@ const STACK_SIZE: usize = 512;
 const INSTRUCTION_SET_FULL: &[&str] = &[
     "NOP", "LDA", "LDAI", "LDB", "LDBI", "LDD", "LDE", "STA", "STAI", "STB", "STBI", "STC", "STD",
     "STE", "PSH", "PLL", "ADD", "SUB", "MUL", "DIV", "FADD", "FSUB", "FMUL", "FDIV", "JMP", "JMPE",
-    "JMPN", "JMPG", "JMPGU", "JMPL", "JMPLU", "CMP", "SHR", "SHL", "AND", "OR", "NOT", "XOR",
-    "NEG", "RET", "HAL",
+    "JMPN", "JMPG", "JMPGU", "JMPL", "JMPLU", "JMPI", "JMPEI", "JMPNI", "JMPGI", "JMPGUI", "JMPLI",
+    "JMPLUI", "CMP", "SHR", "SHL", "AND", "OR", "NOT", "XOR", "NEG", "RET", "HAL",
 ];
 
 const INSTRUCTION_SET_FULL_I: &[&str] = &[
     "NOP", "LDA", "LDAI", "LDB", "LDBI", "LDD", "LDE", "STA", "STAI", "STB", "STBI", "STC", "STD",
     "STE", "PSH", "PLL", "ADD", "SUB", "MUL", "DIV", "JMP", "JMPE", "JMPN", "JMPG", "JMPGU",
-    "JMPL", "JMPLU", "CMP", "SHR", "SHL", "AND", "OR", "NOT", "XOR", "NEG", "RET", "HAL",
+    "JMPL", "JMPLU", "JMPI", "JMPEI", "JMPNI", "JMPGI", "JMPGUI", "JMPLI", "JMPLUI", "CMP", "SHR",
+    "SHL", "AND", "OR", "NOT", "XOR", "NEG", "RET", "HAL",
 ];
 
 fn main() {
@@ -431,6 +432,75 @@ fn emu_32bit(
             }
             31 => {
                 if debug {
+                    println!("JMPI")
+                }
+                let target_address = reg_c as usize;
+                emu_stack[emu_stack_pointer] = current_address as u32;
+                emu_stack_pointer += 1;
+                current_address = target_address;
+            }
+            32 => {
+                if debug {
+                    println!("JMPEI")
+                }
+                if reg_d & 1 != 0 {
+                    current_address = reg_c as usize;
+                } else {
+                    current_address += 1;
+                };
+            }
+            33 => {
+                if debug {
+                    println!("JMPNI")
+                }
+                if reg_d & 1 == 0 {
+                    current_address = reg_c as usize;
+                } else {
+                    current_address += 1;
+                };
+            }
+            34 => {
+                if debug {
+                    println!("JMPGI")
+                }
+                if reg_d & 2 != 0 {
+                    current_address = reg_c as usize;
+                } else {
+                    current_address += 1;
+                };
+            }
+            35 => {
+                if debug {
+                    println!("JMPGUI")
+                }
+                if reg_d & 8 != 0 {
+                    current_address = reg_c as usize;
+                } else {
+                    current_address += 1;
+                };
+            }
+            36 => {
+                if debug {
+                    println!("JMPLI")
+                }
+                if reg_d & 4 != 0 {
+                    current_address = reg_c as usize;
+                } else {
+                    current_address += 1;
+                };
+            }
+            37 => {
+                if debug {
+                    println!("JMPLUI")
+                }
+                if reg_d & 16 != 0 {
+                    current_address = reg_c as usize;
+                } else {
+                    current_address += 1;
+                };
+            }
+            38 => {
+                if debug {
                     println!("CMP")
                 }
                 let mut flags: u32 = 0;
@@ -451,56 +521,56 @@ fn emu_32bit(
                 reg_d = flags;
                 current_address += 1;
             }
-            32 => {
+            39 => {
                 if debug {
                     println!("SHR")
                 }
                 reg_c = reg_a >> 1;
                 current_address += 1;
             }
-            33 => {
+            40 => {
                 if debug {
                     println!("SHL")
                 }
                 reg_c = reg_a << 1;
                 current_address += 1;
             }
-            34 => {
+            41 => {
                 if debug {
                     println!("AND")
                 }
                 reg_c = reg_a & reg_b;
                 current_address += 1;
             }
-            35 => {
+            42 => {
                 if debug {
                     println!("OR")
                 }
                 reg_c = reg_a | reg_b;
                 current_address += 1;
             }
-            36 => {
+            43 => {
                 if debug {
                     println!("NOT")
                 }
                 reg_c = !reg_a;
                 current_address += 1;
             }
-            37 => {
+            44 => {
                 if debug {
                     println!("XOR")
                 }
                 reg_c = reg_a ^ reg_b;
                 current_address += 1;
             }
-            38 => {
+            45 => {
                 if debug {
                     println!("NEG")
                 }
                 reg_c = reg_a.wrapping_neg();
                 current_address += 1;
             }
-            39 => {
+            46 => {
                 if debug {
                     println!("RET")
                 }
@@ -508,7 +578,7 @@ fn emu_32bit(
                 current_address = (emu_stack[emu_stack_pointer] + 2) as usize;
                 println!("{}", current_address);
             }
-            40 => {
+            47 => {
                 if debug {
                     println!("HALT")
                 }

@@ -1,0 +1,21 @@
+!a #0
+!b #1
+!f #0
+!count #0
+!limit #10
+
+@main
+    LDA !a
+    LDB !b
+    ADD
+    STC !f
+    STB !a
+    STC !b
+    LDA !count
+    LDB #1
+    ADD
+    STC !count
+    LDA !count
+    LDB !limit
+    CMP
+    JMPN @main

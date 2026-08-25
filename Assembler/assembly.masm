@@ -1,21 +1,171 @@
-!a #0
-!b #1
-!f #0
-!count #0
-!limit #10
+!res_jmpi #0
+!res_jmpei #0
+!res_jmpni #0
+!res_jmpgi #0
+!res_jmpgi_nt #0
+!res_jmpgui #0
+!res_jmpli #0
+!res_jmplui #0
+!loop_i #0
+!loop_limit #5
+!loop_sum #0
 
 @main
-    LDA !a
-    LDB !b
+    LDA #134
+    LDB #0
     ADD
-    STC !f
-    STB !a
-    STC !b
-    LDA !count
+    JMPI
+    LDA #9
+    STA !res_jmpi
+    JMP @test_conditionals
+
+@test_conditionals
+    LDA #140
+    LDB #0
+    ADD
+    LDA #5
+    LDB #5
+    CMP
+    JMPEI
+    LDA #9
+    STA !res_jmpei
+    JMP @after_jmpei
+
+@after_jmpei
+    LDA #146
+    LDB #0
+    ADD
+    LDA #8
+    LDB #3
+    CMP
+    JMPNI
+    LDA #9
+    STA !res_jmpni
+    JMP @after_jmpni
+
+@after_jmpni
+    LDA #152
+    LDB #0
+    ADD
+    LDA #8
+    LDB #3
+    CMP
+    JMPGI
+    LDA #9
+    STA !res_jmpgi
+    JMP @after_jmpgi
+
+@after_jmpgi
+    LDA #158
+    LDB #0
+    ADD
+    LDA #5
+    LDB #5
+    CMP
+    JMPGI
+    LDA #1
+    STA !res_jmpgi_nt
+    JMP @after_jmpgi_nt
+
+@after_jmpgi_nt
+    LDA #164
+    LDB #0
+    ADD
+    LDA #8
+    LDB #3
+    CMP
+    JMPGUI
+    LDA #9
+    STA !res_jmpgui
+    JMP @after_jmpgui
+
+@after_jmpgui
+    LDA #170
+    LDB #0
+    ADD
+    LDA #3
+    LDB #8
+    CMP
+    JMPLI
+    LDA #9
+    STA !res_jmpli
+    JMP @after_jmpli
+
+@after_jmpli
+    LDA #176
+    LDB #0
+    ADD
+    LDA #3
+    LDB #8
+    CMP
+    JMPLUI
+    LDA #9
+    STA !res_jmplui
+    JMP @after_jmplui
+
+@after_jmplui
+    JMP @loop_test
+
+@jmpi_target
+    LDA #1
+    STA !res_jmpi
+    JMP @test_conditionals
+
+@jmpei_taken
+    LDA #1
+    STA !res_jmpei
+    JMP @after_jmpei
+
+@jmpni_taken
+    LDA #1
+    STA !res_jmpni
+    JMP @after_jmpni
+
+@jmpgi_taken
+    LDA #1
+    STA !res_jmpgi
+    JMP @after_jmpgi
+
+@jmpgi_notaken_bug
+    LDA #9
+    STA !res_jmpgi_nt
+    JMP @after_jmpgi_nt
+
+@jmpgui_taken
+    LDA #1
+    STA !res_jmpgui
+    JMP @after_jmpgui
+
+@jmpli_taken
+    LDA #1
+    STA !res_jmpli
+    JMP @after_jmpli
+
+@jmplui_taken
+    LDA #1
+    STA !res_jmplui
+    JMP @after_jmplui
+
+@loop_test
+    JMP @loop_body
+
+@loop_body
+    LDA !loop_i
     LDB #1
     ADD
-    STC !count
-    LDA !count
-    LDB !limit
+    STC !loop_i
+    LDA !loop_sum
+    LDB !loop_i
+    ADD
+    STC !loop_sum
+    LDA #184
+    LDB #0
+    ADD
+    LDA !loop_i
+    LDB !loop_limit
     CMP
-    JMPN @main
+    JMPNI
+    JMP @done
+
+@done
+    HAL
