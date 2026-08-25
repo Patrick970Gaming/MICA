@@ -167,8 +167,10 @@ fn emu_32bit(
 
         match current_opcode {
             0 => {
-                println!("NOP");
-                continue;
+                if debug {
+                    println!("NOP")
+                }
+                current_address += 1;
             }
             1 => {
                 if debug {
