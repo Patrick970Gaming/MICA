@@ -8,15 +8,15 @@ const MAX_32BIT_NUM: u32 = 4_294_967_295;
 const STACK_SIZE: usize = 512;
 
 const INSTRUCTION_SET_FULL: &[&str] = &[
-    "NOP", "LDA", "LDAI", "LDB", "LDBI", "LDD", "LDE", "STA", "STAI", "STB", "STBI", "STC", "STD",
-    "STE", "PSH", "PLL", "ADD", "SUB", "MUL", "DIV", "FADD", "FSUB", "FMUL", "FDIV", "JMP", "JMPE",
-    "JMPN", "JMPG", "JMPGU", "JMPL", "JMPLU", "JMPI", "JMPEI", "JMPNI", "JMPGI", "JMPGUI", "JMPLI",
-    "JMPLUI", "CMP", "SHR", "SHL", "AND", "OR", "NOT", "XOR", "NEG", "RET", "HAL",
+    "NOP", "LDA", "LDAI", "LDB", "LDBI", "LDC", "LDD", "LDE", "STA", "STAI", "STB", "STBI", "STC",
+    "STD", "STE", "PSH", "PLL", "ADD", "SUB", "MUL", "DIV", "FADD", "FSUB", "FMUL", "FDIV", "JMP",
+    "JMPE", "JMPN", "JMPG", "JMPGU", "JMPL", "JMPLU", "JMPI", "JMPEI", "JMPNI", "JMPGI", "JMPGUI",
+    "JMPLI", "JMPLUI", "CMP", "SHR", "SHL", "AND", "OR", "NOT", "XOR", "NEG", "RET", "HAL",
 ];
 
 const INSTRUCTION_SET_FULL_I: &[&str] = &[
-    "NOP", "LDA", "LDAI", "LDB", "LDBI", "LDD", "LDE", "STA", "STAI", "STB", "STBI", "STC", "STD",
-    "STE", "PSH", "PLL", "ADD", "SUB", "MUL", "DIV", "JMP", "JMPE", "JMPN", "JMPG", "JMPGU",
+    "NOP", "LDA", "LDAI", "LDB", "LDBI", "LDC", "LDD", "LDE", "STA", "STAI", "STB", "STBI", "STC",
+    "STD", "STE", "PSH", "PLL", "ADD", "SUB", "MUL", "DIV", "JMP", "JMPE", "JMPN", "JMPG", "JMPGU",
     "JMPL", "JMPLU", "JMPI", "JMPEI", "JMPNI", "JMPGI", "JMPGUI", "JMPLI", "JMPLUI", "CMP", "SHR",
     "SHL", "AND", "OR", "NOT", "XOR", "NEG", "RET", "HAL",
 ];
@@ -207,13 +207,21 @@ fn emu_32bit(
             }
             5 => {
                 if debug {
+                    println!("LDC")
+                }
+                let target_address = emu_ram_32bit[current_address + 1] as usize;
+                reg_c = emu_ram_32bit[target_address];
+                current_address += 2;
+            }
+            6 => {
+                if debug {
                     println!("LDD")
                 }
                 let target_address = emu_ram_32bit[current_address + 1] as usize;
                 reg_d = emu_ram_32bit[target_address];
                 current_address += 2;
             }
-            6 => {
+            7 => {
                 if debug {
                     println!("LDE")
                 }
@@ -221,7 +229,7 @@ fn emu_32bit(
                 reg_e = emu_ram_32bit[target_address];
                 current_address += 2;
             }
-            7 => {
+            8 => {
                 if debug {
                     println!("STA")
                 }
@@ -229,7 +237,7 @@ fn emu_32bit(
                 emu_ram_32bit[target_address] = reg_a;
                 current_address += 2;
             }
-            8 => {
+            9 => {
                 if debug {
                     println!("STAI")
                 }
@@ -237,7 +245,7 @@ fn emu_32bit(
                 emu_ram_32bit[target_address] = reg_a;
                 current_address += 2;
             }
-            9 => {
+            10 => {
                 if debug {
                     println!("STB")
                 }
@@ -245,7 +253,7 @@ fn emu_32bit(
                 emu_ram_32bit[target_address] = reg_b;
                 current_address += 2;
             }
-            10 => {
+            11 => {
                 if debug {
                     println!("STBI")
                 }
@@ -253,7 +261,7 @@ fn emu_32bit(
                 emu_ram_32bit[target_address] = reg_b;
                 current_address += 2;
             }
-            11 => {
+            12 => {
                 if debug {
                     println!("STC")
                 }
@@ -261,7 +269,7 @@ fn emu_32bit(
                 emu_ram_32bit[target_address] = reg_c;
                 current_address += 2;
             }
-            12 => {
+            13 => {
                 if debug {
                     println!("STD")
                 }
@@ -269,7 +277,7 @@ fn emu_32bit(
                 emu_ram_32bit[target_address] = reg_d;
                 current_address += 2;
             }
-            13 => {
+            14 => {
                 if debug {
                     println!("STE")
                 }
@@ -277,7 +285,7 @@ fn emu_32bit(
                 emu_ram_32bit[target_address] = reg_e;
                 current_address += 2;
             }
-            14 => {
+            15 => {
                 if debug {
                     println!("PSH")
                 }
@@ -285,7 +293,7 @@ fn emu_32bit(
                 emu_stack_pointer += 1;
                 current_address += 1;
             }
-            15 => {
+            16 => {
                 if debug {
                     println!("PLL")
                 }
@@ -293,35 +301,35 @@ fn emu_32bit(
                 reg_a = emu_stack[emu_stack_pointer];
                 current_address += 1;
             }
-            16 => {
+            17 => {
                 if debug {
                     println!("ADD")
                 }
                 reg_c = reg_a + reg_b;
                 current_address += 1
             }
-            17 => {
+            18 => {
                 if debug {
                     println!("SUB")
                 }
                 reg_c = reg_a - reg_b;
                 current_address += 1;
             }
-            18 => {
+            19 => {
                 if debug {
                     println!("MUL")
                 }
                 reg_c = reg_a * reg_b;
                 current_address += 1;
             }
-            19 => {
+            20 => {
                 if debug {
                     println!("DIV")
                 }
                 reg_c = reg_a / reg_b;
                 current_address += 1;
             }
-            20 => {
+            21 => {
                 //FADD
                 if debug {
                     println!("FADD")
@@ -330,7 +338,7 @@ fn emu_32bit(
                 reg_c = result.to_bits();
                 current_address += 1;
             }
-            21 => {
+            22 => {
                 //FSUB
                 if debug {
                     println!("FSUB")
@@ -339,7 +347,7 @@ fn emu_32bit(
                 reg_c = result.to_bits();
                 current_address += 1;
             }
-            22 => {
+            23 => {
                 //FMUL
                 if debug {
                     println!("FMUL")
@@ -348,7 +356,7 @@ fn emu_32bit(
                 reg_c = result.to_bits();
                 current_address += 1;
             }
-            23 => {
+            24 => {
                 //FDIV
                 if debug {
                     println!("FDIV")
@@ -357,7 +365,7 @@ fn emu_32bit(
                 reg_c = result.to_bits();
                 current_address += 1;
             }
-            24 => {
+            25 => {
                 if debug {
                     println!("JMP")
                 }
@@ -366,7 +374,7 @@ fn emu_32bit(
                 emu_stack_pointer += 1;
                 current_address = target_address;
             }
-            25 => {
+            26 => {
                 if debug {
                     println!("JMPE")
                 }
@@ -377,7 +385,7 @@ fn emu_32bit(
                     current_address += 2;
                 };
             }
-            26 => {
+            27 => {
                 if debug {
                     println!("JMPN")
                 }
@@ -388,7 +396,7 @@ fn emu_32bit(
                     current_address += 2;
                 };
             }
-            27 => {
+            28 => {
                 if debug {
                     println!("JMPG")
                 }
@@ -399,7 +407,7 @@ fn emu_32bit(
                     current_address += 2;
                 };
             }
-            28 => {
+            29 => {
                 if debug {
                     println!("JMPGU")
                 }
@@ -410,7 +418,7 @@ fn emu_32bit(
                     current_address += 2;
                 };
             }
-            29 => {
+            30 => {
                 if debug {
                     println!("JMPL")
                 }
@@ -421,7 +429,7 @@ fn emu_32bit(
                     current_address += 2;
                 };
             }
-            30 => {
+            31 => {
                 if debug {
                     println!("JMPLU")
                 }
@@ -432,7 +440,7 @@ fn emu_32bit(
                     current_address += 2;
                 };
             }
-            31 => {
+            32 => {
                 if debug {
                     println!("JMPI")
                 }
@@ -445,7 +453,7 @@ fn emu_32bit(
                 emu_stack_pointer += 1;
                 current_address = target_address;
             }
-            32 => {
+            33 => {
                 if debug {
                     println!("JMPEI")
                 }
@@ -455,7 +463,7 @@ fn emu_32bit(
                     current_address += 1;
                 };
             }
-            33 => {
+            34 => {
                 if debug {
                     println!("JMPNI")
                 }
@@ -465,7 +473,7 @@ fn emu_32bit(
                     current_address += 1;
                 };
             }
-            34 => {
+            35 => {
                 if debug {
                     println!("JMPGI")
                 }
@@ -475,7 +483,7 @@ fn emu_32bit(
                     current_address += 1;
                 };
             }
-            35 => {
+            36 => {
                 if debug {
                     println!("JMPGUI")
                 }
@@ -485,7 +493,7 @@ fn emu_32bit(
                     current_address += 1;
                 };
             }
-            36 => {
+            37 => {
                 if debug {
                     println!("JMPLI")
                 }
@@ -495,7 +503,7 @@ fn emu_32bit(
                     current_address += 1;
                 };
             }
-            37 => {
+            38 => {
                 if debug {
                     println!("JMPLUI")
                 }
@@ -505,7 +513,7 @@ fn emu_32bit(
                     current_address += 1;
                 };
             }
-            38 => {
+            39 => {
                 if debug {
                     println!("CMP")
                 }
@@ -527,56 +535,56 @@ fn emu_32bit(
                 reg_d = flags;
                 current_address += 1;
             }
-            39 => {
+            40 => {
                 if debug {
                     println!("SHR")
                 }
                 reg_c = reg_a >> 1;
                 current_address += 1;
             }
-            40 => {
+            41 => {
                 if debug {
                     println!("SHL")
                 }
                 reg_c = reg_a << 1;
                 current_address += 1;
             }
-            41 => {
+            42 => {
                 if debug {
                     println!("AND")
                 }
                 reg_c = reg_a & reg_b;
                 current_address += 1;
             }
-            42 => {
+            43 => {
                 if debug {
                     println!("OR")
                 }
                 reg_c = reg_a | reg_b;
                 current_address += 1;
             }
-            43 => {
+            44 => {
                 if debug {
                     println!("NOT")
                 }
                 reg_c = !reg_a;
                 current_address += 1;
             }
-            44 => {
+            45 => {
                 if debug {
                     println!("XOR")
                 }
                 reg_c = reg_a ^ reg_b;
                 current_address += 1;
             }
-            45 => {
+            46 => {
                 if debug {
                     println!("NEG")
                 }
                 reg_c = reg_a.wrapping_neg();
                 current_address += 1;
             }
-            46 => {
+            47 => {
                 if debug {
                     println!("RET")
                 }
@@ -584,7 +592,7 @@ fn emu_32bit(
                 current_address = (emu_stack[emu_stack_pointer] + 2) as usize;
                 println!("{}", current_address);
             }
-            47 => {
+            48 => {
                 if debug {
                     println!("HALT")
                 }

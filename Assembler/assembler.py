@@ -16,16 +16,25 @@ debug_code_output_start = 0 # Starting address of the above
 dir_path = os.path.dirname(os.path.realpath(__file__))
 
 instruction_set_full = [
-    "NOP",     "LDA",     "LDAI",     "LDB",     "LDBI",     "LDD",     "LDE",     "STA",     "STAI",     "STB",     "STBI",     "STC",     "STD",     "STE",     "PSH",     "PLL",
+    "NOP",     "LDA",     "LDAI",     "LDB",     "LDBI",     "LDC",     "LDD",     "LDE",     "STA",     "STAI",     "STB",     "STBI",     "STC",     "STD",     "STE",     "PSH",     "PLL",
     "ADD",     "SUB",     "MUL",     "DIV",     "FADD",     "FSUB",     "FMUL",     "FDIV",     "JMP",     "JMPE",     "JMPN",     "JMPG",     "JMPGU",     "JMPL",     "JMPLU",
     "JMPI",     "JMPEI",     "JMPNI",     "JMPGI",     "JMPGUI",     "JMPLI",     "JMPLUI",     "CMP",
     "SHR",     "SHL",     "AND",     "OR",     "NOT",     "XOR",     "NEG",     "RET",     "HAL"
 ]
 
-instruction_set_fullI = ["NOP", "LDA", "LDAI", "LDB", "LDBI", "LDD", "LDE", "STA", "STAI", "STB", "STBI", "STC", "STD", "STE", "PSH", "PLL",
+instruction_set_fullI = ["NOP", "LDA", "LDAI", "LDB", "LDBI", "LDC", "LDD", "LDE", "STA", "STAI", "STB", "STBI", "STC", "STD", "STE", "PSH", "PLL",
     "ADD", "SUB", "MUL", "DIV", "JMP", "JMPE", "JMPN", "JMPG", "JMPGU", "JMPL", "JMPLU",
     "JMPI", "JMPEI", "JMPNI", "JMPGI", "JMPGUI", "JMPLI", "JMPLUI", "CMP", "SHR", "SHL", "AND", "OR", "NOT", "XOR",
     "NEG", "RET", "HAL"]
+
+# Instructions whose operand is a *code* address, i.e. a jump target that is
+# emitted literally. Every other instruction that takes an operand (the LD*/ST*
+# family) treats its operand as a *data* address, which is why "@label" has to
+# mean two different things depending on which of these two sets it appears in.
+# See resolve_label_operand().
+code_address_instructions = {
+    "JMP", "JMPE", "JMPN", "JMPG", "JMPGU", "JMPL", "JMPLU"
+}
 
 # Tool functions
 def is_power_of_two(n: int) -> bool:
@@ -201,6 +210,37 @@ for name in labels:
 
 if verbose: print(f"Label offsets: {label_offsets}")
 
+
+# These two helpers read `varibles`, `total_function_len` and `label_offsets`,
+# so they can only be called once all three are populated - i.e. from pass 2
+# onwards, not from the length-calculation pass above.
+
+def intern_constant(value: int) -> int:
+    """Places a literal in the constant pool and returns the RAM word address
+    it will live at. The pool is just the variable table: literals become
+    anonymous variables appended after the named ones, so they get emitted by
+    the same "add variable references to the image" loop at the bottom.
+    Identical literals are shared rather than duplicated."""
+    key = ("const", value)
+    if key not in varibles:
+        varibles[key] = {"value": value, "var_num": len(varibles)}
+    return varibles[key]["var_num"] + total_function_len
+
+
+def resolve_label_operand(mnemonic: str, label_name: str) -> int:
+    """Resolves an '@label' operand. For a jump the operand *is* the code
+    address, so it's emitted literally. For a load/store the operand is a data
+    address, so the label's code address is placed in the constant pool and the
+    address of that pool word is emitted instead - which is what makes
+    `LDC @target` followed by `JMPI` work."""
+    if label_name not in label_offsets:
+        raise ValueError(f"Unknown label @{label_name}")
+    target = label_offsets[label_name]
+    if mnemonic in code_address_instructions:
+        return target
+    return intern_constant(target)
+
+
 output_code = []
 
 # porcess labelsas
@@ -216,58 +256,28 @@ for function in labels:
             splited = line.split(" ")
         if verbose: print(f"splitted (processing labels): {splited}")
         if len(splited) > 1:
-            opcode = splited[0]
-            if verbose: print(f"opcode (processing labels): {opcode}")
-            opcode = instruct_dict[opcode]
+            mnemonic = splited[0]
+            if verbose: print(f"opcode (processing labels): {mnemonic}")
+            opcode = instruct_dict[mnemonic]
             for i in range(3): code_bytes.append(0)
             code_bytes.append(opcode)
 
             data = splited[1]
             if data[0] == "#": # get value from decimal value (parameter is decimal)
-                data = parse_decimal_literal(data)
-                value = data
-                data = hash(str(value))
-                if data not in varibles:
-                    previous_var = list(varibles.keys())[-1]
-                    varibles[data] = {"value": value, "var_num": varibles[previous_var]["var_num"] + 1}
-                    data = varibles[data]["var_num"] + total_function_len
-                else:
-                    data = varibles[data]["var_num"] + total_function_len
-                code_bytes.append((4278190080 & data) >> 24)
-                code_bytes.append((16711680 & data) >> 16)
-                code_bytes.append((65280 & data) >> 8)
-                code_bytes.append(255 & data)
+                data = intern_constant(parse_decimal_literal(data))
             elif data[0] == "$": # get value from hexadecimal value (parameter is hexadecimal)
-                data = int(data.replace("$", ""), 16)
-                value = data
-                data = hash(str(value))
-                if data not in varibles:
-                    previous_var = list(varibles.keys())[-1]
-                    varibles[data] = {"value": value, "var_num": varibles[previous_var]["var_num"] + 1}
-                    data = varibles[data]["var_num"] + total_function_len
-                else:
-                    data = varibles[data]["var_num"] + total_function_len
-                code_bytes.append((4278190080 & data) >> 24)
-                code_bytes.append((16711680 & data) >> 16)
-                code_bytes.append((65280 & data) >> 8)
-                code_bytes.append(255 & data)
+                data = intern_constant(int(data.replace("$", ""), 16))
             elif data[0] == "!": # parameter is varaible
-                data = data[1:]
-                data = varibles[data]["var_num"] + total_function_len
-                code_bytes.append((4278190080 & data) >> 24)
-                code_bytes.append((16711680 & data) >> 16)
-                code_bytes.append((65280 & data) >> 8)
-                code_bytes.append(255 & data)
+                data = varibles[data[1:]]["var_num"] + total_function_len
             elif data[0] == "@": # parameter is label
-                data = data[1:]
-                data = label_offsets[data]
-                code_bytes.append((4278190080 & data) >> 24)
-                code_bytes.append((16711680 & data) >> 16)
-                code_bytes.append((65280 & data) >> 8)
-                code_bytes.append(255 & data)
+                data = resolve_label_operand(mnemonic, data[1:])
             else:
-                print(f"{data} is not valid in {labels[function]}")
+                raise ValueError(f"{data} is not valid in {labels[function]}")
 
+            code_bytes.append((4278190080 & data) >> 24)
+            code_bytes.append((16711680 & data) >> 16)
+            code_bytes.append((65280 & data) >> 8)
+            code_bytes.append(255 & data)
 
             if verbose: print(f"data (processing labels): {data}")
         elif len(splited) == 0 or splited[0] != "":
@@ -296,7 +306,6 @@ for fun_counter, label in enumerate(processed_labels):
 
 # Add varaible refernces to the image:
 for var in varibles:
-    address = (varibles[var]['var_num'] * 2) + total_function_len
     value = varibles[var]['value']
     output_code.append((4278190080 & value) >> 24)
     output_code.append((16711680 & value) >> 16)

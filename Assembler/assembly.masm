@@ -1,184 +1,35 @@
-!res_jmpi #0
-!res_jmpei #0
-!res_jmpni #0
-!res_jmpgi #0
-!res_jmpgi_nt #0
-!res_jmpgui #0
-!res_jmpli #0
-!res_jmplui #0
-!res_jmpi_ret #0
-!loop_i #0
-!loop_limit #5
-!loop_sum #0
+!ldc_direct #0
+!ldc_label #0
+!sum #0
+!i #0
+!limit #5
+!const_seven #7
 
 @main
-    LDA #146
-    LDB #0
-    ADD
+    LDC !const_seven
+    STC !ldc_direct
+    LDC @subroutine
+    STC !ldc_label
     JMPI
-    LDA #9
-    STA !res_jmpi
-    JMP @test_conditionals
+    JMP @loop
 
-@test_conditionals
-    LDA #152
-    LDB #0
-    ADD
-    LDA #5
-    LDB #5
-    CMP
-    JMPEI
-    LDA #9
-    STA !res_jmpei
-    JMP @after_jmpei
-
-@after_jmpei
-    LDA #158
-    LDB #0
-    ADD
-    LDA #8
-    LDB #3
-    CMP
-    JMPNI
-    LDA #9
-    STA !res_jmpni
-    JMP @after_jmpni
-
-@after_jmpni
-    LDA #164
-    LDB #0
-    ADD
-    LDA #8
-    LDB #3
-    CMP
-    JMPGI
-    LDA #9
-    STA !res_jmpgi
-    JMP @after_jmpgi
-
-@after_jmpgi
-    LDA #170
-    LDB #0
-    ADD
-    LDA #5
-    LDB #5
-    CMP
-    JMPGI
-    LDA #1
-    STA !res_jmpgi_nt
-    JMP @after_jmpgi_nt
-
-@after_jmpgi_nt
-    LDA #176
-    LDB #0
-    ADD
-    LDA #8
-    LDB #3
-    CMP
-    JMPGUI
-    LDA #9
-    STA !res_jmpgui
-    JMP @after_jmpgui
-
-@after_jmpgui
-    LDA #182
-    LDB #0
-    ADD
-    LDA #3
-    LDB #8
-    CMP
-    JMPLI
-    LDA #9
-    STA !res_jmpli
-    JMP @after_jmpli
-
-@after_jmpli
-    LDA #188
-    LDB #0
-    ADD
-    LDA #3
-    LDB #8
-    CMP
-    JMPLUI
-    LDA #9
-    STA !res_jmplui
-    JMP @after_jmplui
-
-@after_jmplui
-    JMP @jmpi_ret_test
-
-@jmpi_ret_test
-    LDA #194
-    LDB #0
-    ADD
-    JMPI
-    LDA #1
-    STA !res_jmpi_ret
-    JMP @loop_test
-
-@jmpi_target
-    LDA #1
-    STA !res_jmpi
-    JMP @test_conditionals
-
-@jmpei_taken
-    LDA #1
-    STA !res_jmpei
-    JMP @after_jmpei
-
-@jmpni_taken
-    LDA #1
-    STA !res_jmpni
-    JMP @after_jmpni
-
-@jmpgi_taken
-    LDA #1
-    STA !res_jmpgi
-    JMP @after_jmpgi
-
-@jmpgi_notaken_bug
-    LDA #9
-    STA !res_jmpgi_nt
-    JMP @after_jmpgi_nt
-
-@jmpgui_taken
-    LDA #1
-    STA !res_jmpgui
-    JMP @after_jmpgui
-
-@jmpli_taken
-    LDA #1
-    STA !res_jmpli
-    JMP @after_jmpli
-
-@jmplui_taken
-    LDA #1
-    STA !res_jmplui
-    JMP @after_jmplui
-
-@jmpi_subroutine
-    RET
-
-@loop_test
-    JMP @loop_body
-
-@loop_body
-    LDA !loop_i
+@loop
+    LDA !i
     LDB #1
     ADD
-    STC !loop_i
-    LDA !loop_sum
-    LDB !loop_i
+    STC !i
+    LDA !sum
+    LDB !i
     ADD
-    STC !loop_sum
-    LDA #197
-    LDB #0
-    ADD
-    LDA !loop_i
-    LDB !loop_limit
+    STC !sum
+    LDA !i
+    LDB !limit
     CMP
-    JMPNI
+    JMPN @loop
     JMP @done
+
+@subroutine
+    RET
 
 @done
     HAL
