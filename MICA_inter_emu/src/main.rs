@@ -104,14 +104,16 @@ fn emu_16bit() {
 }
 */
 
-fn load_image_into_ram(path: &str, ram: &mut [u32]) {
+fn load_image_into_ram(path: &str, ram: &mut [u32], debug: bool) {
     let my_buf = BufReader::new(File::open(path).unwrap());
 
     let mut emu_image_raw: Vec<u8> = vec![];
     for byte_or_error in my_buf.bytes() {
         emu_image_raw.push(byte_or_error.unwrap());
     }
-    println!("{:?}", emu_image_raw);
+    if debug {
+        println!("{:?}", emu_image_raw);
+    }
 
     let length_32bit = emu_image_raw.len() / 4;
     if length_32bit > ram.len() {
@@ -142,7 +144,7 @@ fn emu_32bit(
     memory_dump_length: usize,
 ) {
     let mut emu_ram_32bit: Vec<u32> = vec![0; ram_size as usize];
-    load_image_into_ram("./output32.bin", &mut emu_ram_32bit);
+    load_image_into_ram("./output32.bin", &mut emu_ram_32bit, debug);
 
     println!("Starting Emulation");
     //let mut emu_running: bool = true;
