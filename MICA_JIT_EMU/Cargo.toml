@@ -1,6 +1,16 @@
 [package]
-name = "MICA_JIT_EMU"
+name = "mica_jit_emu"
 version = "0.1.0"
-edition = "2024"
+edition = "2021"
+description = "Block-level JIT recompiler for the MICA ISA, with a tier-0 interpreter used as both cold-code executor and differential oracle."
 
 [dependencies]
+serde_json = "1.0"
+cranelift-codegen = "0.135"
+cranelift-frontend = "0.135"
+cranelift-jit = "0.135"
+cranelift-module = "0.135"
+cranelift-native = "0.135"
+
+[profile.release]
+debug = true

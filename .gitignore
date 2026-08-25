@@ -1,5 +1,6 @@
 *.bin
 ~$Architecture.xlsx
 MICA_inter_emu/target/
+MICA_JIT_emu/target/
 *.ods#
 .~lock.*#

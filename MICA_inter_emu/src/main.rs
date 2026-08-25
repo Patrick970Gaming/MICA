@@ -189,7 +189,7 @@ fn emu_32bit(
                 }
                 let target_address = reg_c as usize;
                 reg_a = emu_ram_32bit[target_address];
-                current_address += 2;
+                current_address += 1;
             }
             3 => {
                 if debug {
@@ -205,7 +205,7 @@ fn emu_32bit(
                 }
                 let target_address = reg_c as usize;
                 reg_b = emu_ram_32bit[target_address];
-                current_address += 2;
+                current_address += 1;
             }
             5 => {
                 if debug {
@@ -245,7 +245,7 @@ fn emu_32bit(
                 }
                 let target_address = reg_c as usize;
                 emu_ram_32bit[target_address] = reg_a;
-                current_address += 2;
+                current_address += 1;
             }
             10 => {
                 if debug {
@@ -261,7 +261,7 @@ fn emu_32bit(
                 }
                 let target_address = reg_c as usize;
                 emu_ram_32bit[target_address] = reg_b;
-                current_address += 2;
+                current_address += 1;
             }
             12 => {
                 if debug {
