@@ -185,7 +185,7 @@ fn emu_32bit(
                 if debug {
                     println!("LDAI")
                 }
-                let target_address = reg_a as usize;
+                let target_address = reg_c as usize;
                 reg_a = emu_ram_32bit[target_address];
                 current_address += 2;
             }
@@ -201,7 +201,7 @@ fn emu_32bit(
                 if debug {
                     println!("LDBI")
                 }
-                let target_address = reg_b as usize;
+                let target_address = reg_c as usize;
                 reg_b = emu_ram_32bit[target_address];
                 current_address += 2;
             }
@@ -241,7 +241,7 @@ fn emu_32bit(
                 if debug {
                     println!("STAI")
                 }
-                let target_address = reg_a as usize;
+                let target_address = reg_c as usize;
                 emu_ram_32bit[target_address] = reg_a;
                 current_address += 2;
             }
@@ -257,7 +257,7 @@ fn emu_32bit(
                 if debug {
                     println!("STBI")
                 }
-                let target_address = reg_b as usize;
+                let target_address = reg_c as usize;
                 emu_ram_32bit[target_address] = reg_b;
                 current_address += 2;
             }
