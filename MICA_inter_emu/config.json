@@ -4,6 +4,6 @@
   "verbose": true,
   "ram_size": 65536,
   "memory_dump_enabled": true,
-  "memory_dump_start": 212,
-  "memory_dump_length": 11
+  "memory_dump_start": 225,
+  "memory_dump_length": 12
 }

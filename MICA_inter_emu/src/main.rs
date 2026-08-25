@@ -435,7 +435,11 @@ fn emu_32bit(
                     println!("JMPI")
                 }
                 let target_address = reg_c as usize;
-                emu_stack[emu_stack_pointer] = current_address as u32;
+                // JMPI is a 1-word instruction (no operand word, unlike JMP's 2),
+                // but RET always does `popped + 2` to skip a call's opcode+operand.
+                // Push current_address - 1 so that RET's fixed +2 lands on
+                // current_address + 1, i.e. the instruction right after JMPI.
+                emu_stack[emu_stack_pointer] = (current_address as u32).wrapping_sub(1);
                 emu_stack_pointer += 1;
                 current_address = target_address;
             }

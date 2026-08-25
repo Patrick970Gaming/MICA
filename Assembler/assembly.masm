@@ -6,12 +6,13 @@
 !res_jmpgui #0
 !res_jmpli #0
 !res_jmplui #0
+!res_jmpi_ret #0
 !loop_i #0
 !loop_limit #5
 !loop_sum #0
 
 @main
-    LDA #134
+    LDA #146
     LDB #0
     ADD
     JMPI
@@ -20,7 +21,7 @@
     JMP @test_conditionals
 
 @test_conditionals
-    LDA #140
+    LDA #152
     LDB #0
     ADD
     LDA #5
@@ -32,7 +33,7 @@
     JMP @after_jmpei
 
 @after_jmpei
-    LDA #146
+    LDA #158
     LDB #0
     ADD
     LDA #8
@@ -44,7 +45,7 @@
     JMP @after_jmpni
 
 @after_jmpni
-    LDA #152
+    LDA #164
     LDB #0
     ADD
     LDA #8
@@ -56,7 +57,7 @@
     JMP @after_jmpgi
 
 @after_jmpgi
-    LDA #158
+    LDA #170
     LDB #0
     ADD
     LDA #5
@@ -68,7 +69,7 @@
     JMP @after_jmpgi_nt
 
 @after_jmpgi_nt
-    LDA #164
+    LDA #176
     LDB #0
     ADD
     LDA #8
@@ -80,7 +81,7 @@
     JMP @after_jmpgui
 
 @after_jmpgui
-    LDA #170
+    LDA #182
     LDB #0
     ADD
     LDA #3
@@ -92,7 +93,7 @@
     JMP @after_jmpli
 
 @after_jmpli
-    LDA #176
+    LDA #188
     LDB #0
     ADD
     LDA #3
@@ -104,6 +105,15 @@
     JMP @after_jmplui
 
 @after_jmplui
+    JMP @jmpi_ret_test
+
+@jmpi_ret_test
+    LDA #194
+    LDB #0
+    ADD
+    JMPI
+    LDA #1
+    STA !res_jmpi_ret
     JMP @loop_test
 
 @jmpi_target
@@ -146,6 +156,9 @@
     STA !res_jmplui
     JMP @after_jmplui
 
+@jmpi_subroutine
+    RET
+
 @loop_test
     JMP @loop_body
 
@@ -158,7 +171,7 @@
     LDB !loop_i
     ADD
     STC !loop_sum
-    LDA #184
+    LDA #197
     LDB #0
     ADD
     LDA !loop_i
