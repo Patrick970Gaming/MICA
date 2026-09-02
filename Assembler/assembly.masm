@@ -1,2 +1,6 @@
 @main
     LDA #69
+    LDB #420
+    LDA &8
+    STA &7
+    LDA &7

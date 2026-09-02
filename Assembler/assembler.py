@@ -46,7 +46,8 @@ def parse_decimal_literal(token: str) -> int:
     as-is; anything with a decimal point is packed as an IEEE-754
     float bit pattern so FADD/FSUB/FMUL/FDIV can operate on it."""
     text = token.replace("#", "")
-    text = token.replace("&", "")
+    text = text.replace("&", "")
+    print(token)
     if "." in text:
         return struct.unpack(">I", struct.pack(">f", float(text)))[0]
     return int(text)
