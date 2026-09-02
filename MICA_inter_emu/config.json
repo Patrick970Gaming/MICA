@@ -3,7 +3,8 @@
   "instruction_set_standard": "full",
   "verbose": true,
   "ram_size": 65536,
-  "memory_dump_enabled": true,
+  "memory_dump_enabled": false,
   "memory_dump_start": 0,
-  "memory_dump_length": 64
+  "memory_dump_length": 64,
+  "rom_start": 65000
 }

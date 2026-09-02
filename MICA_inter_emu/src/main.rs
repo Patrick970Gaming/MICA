@@ -2,6 +2,7 @@ use serde_json::Value;
 use std::fs::File;
 use std::io::BufReader;
 use std::io::Read;
+use yansi::Paint;
 
 //const MAX_16BIT_NUM: u32 = 65_535;
 const MAX_32BIT_NUM: u32 = 4_294_967_295;
@@ -71,6 +72,10 @@ fn main() {
     let memory_dump_length: u64 = read_config["memory_dump_length"]
         .as_u64()
         .expect("memory_dump_start missing or not an integer");
+
+    let rom_start: u64 = read_config["memory_dump_length"]
+        .as_u64()
+        .expect("memory_dump_start missing or not an integer");
     /*
     if emu_bitwidth == 16 {
         emu_16bit();
@@ -84,6 +89,7 @@ fn main() {
             memory_dump_enabled,
             memory_dump_start as usize,
             memory_dump_length as usize,
+            rom_start as usize,
         );
     }
 }
@@ -104,7 +110,7 @@ fn emu_16bit() {
 }
 */
 
-fn load_image_into_ram(path: &str, ram: &mut [u32], debug: bool) {
+fn load_image_into_mmio(path: &str, ram: &mut [u32], debug: bool) {
     let my_buf = BufReader::new(File::open(path).unwrap());
 
     let mut emu_image_raw: Vec<u8> = vec![];
@@ -133,7 +139,7 @@ fn load_image_into_ram(path: &str, ram: &mut [u32], debug: bool) {
         counter += 4;
     }
 
-    println!("{:?}", ram);
+    //println!("{:?}", ram);
 }
 
 fn emu_32bit(
@@ -142,13 +148,14 @@ fn emu_32bit(
     memory_dump_enabled: bool,
     memory_dump_start: usize,
     memory_dump_length: usize,
+    rom_start: usize,
 ) {
-    let mut emu_ram_32bit: Vec<u32> = vec![0; ram_size as usize];
-    load_image_into_ram("./output32.bin", &mut emu_ram_32bit, debug);
+    let mut emu_mmio_32bit: Vec<u32> = vec![0; ram_size as usize];
+    load_image_into_mmio("./output32.bin", &mut emu_mmio_32bit, debug);
 
     println!("Starting Emulation");
     //let mut emu_running: bool = true;
-    let mut current_address: usize = 0;
+    let mut current_address: usize = (ram_size / 2) - 1; //Starting address
 
     //registers
     let mut reg_a: u32 = 0;
@@ -162,7 +169,11 @@ fn emu_32bit(
     let mut emu_stack: [u32; STACK_SIZE] = [0; STACK_SIZE];
 
     loop {
-        let current_opcode = emu_ram_32bit[current_address];
+        if current_address >= ram_size {
+            println!("{}", Paint::red("Programed excedeed ram size"));
+            break;
+        }
+        let current_opcode = emu_mmio_32bit[current_address];
         if debug {
             println!("Current opcode: {}", current_opcode)
         };
@@ -178,8 +189,8 @@ fn emu_32bit(
                 if debug {
                     println!("LDA")
                 }
-                let target_address = emu_ram_32bit[current_address + 1] as usize;
-                reg_a = emu_ram_32bit[target_address];
+                let target_address = emu_mmio_32bit[current_address + 1] as usize;
+                reg_a = emu_mmio_32bit[target_address];
                 current_address += 2;
                 //println!("{}", current_address)
             }
@@ -188,15 +199,15 @@ fn emu_32bit(
                     println!("LDAI")
                 }
                 let target_address = reg_c as usize;
-                reg_a = emu_ram_32bit[target_address];
+                reg_a = emu_mmio_32bit[target_address];
                 current_address += 1;
             }
             3 => {
                 if debug {
                     println!("LDB")
                 }
-                let target_address = emu_ram_32bit[current_address + 1] as usize;
-                reg_b = emu_ram_32bit[target_address];
+                let target_address = emu_mmio_32bit[current_address + 1] as usize;
+                reg_b = emu_mmio_32bit[target_address];
                 current_address += 2;
             }
             4 => {
@@ -204,39 +215,39 @@ fn emu_32bit(
                     println!("LDBI")
                 }
                 let target_address = reg_c as usize;
-                reg_b = emu_ram_32bit[target_address];
+                reg_b = emu_mmio_32bit[target_address];
                 current_address += 1;
             }
             5 => {
                 if debug {
                     println!("LDC")
                 }
-                let target_address = emu_ram_32bit[current_address + 1] as usize;
-                reg_c = emu_ram_32bit[target_address];
+                let target_address = emu_mmio_32bit[current_address + 1] as usize;
+                reg_c = emu_mmio_32bit[target_address];
                 current_address += 2;
             }
             6 => {
                 if debug {
                     println!("LDD")
                 }
-                let target_address = emu_ram_32bit[current_address + 1] as usize;
-                reg_d = emu_ram_32bit[target_address];
+                let target_address = emu_mmio_32bit[current_address + 1] as usize;
+                reg_d = emu_mmio_32bit[target_address];
                 current_address += 2;
             }
             7 => {
                 if debug {
                     println!("LDE")
                 }
-                let target_address = emu_ram_32bit[current_address + 1] as usize;
-                reg_e = emu_ram_32bit[target_address];
+                let target_address = emu_mmio_32bit[current_address + 1] as usize;
+                reg_e = emu_mmio_32bit[target_address];
                 current_address += 2;
             }
             8 => {
                 if debug {
                     println!("STA")
                 }
-                let target_address = emu_ram_32bit[current_address + 1] as usize;
-                emu_ram_32bit[target_address] = reg_a;
+                let target_address = emu_mmio_32bit[current_address + 1] as usize;
+                emu_mmio_32bit[target_address] = reg_a;
                 current_address += 2;
             }
             9 => {
@@ -244,15 +255,15 @@ fn emu_32bit(
                     println!("STAI")
                 }
                 let target_address = reg_c as usize;
-                emu_ram_32bit[target_address] = reg_a;
+                emu_mmio_32bit[target_address] = reg_a;
                 current_address += 1;
             }
             10 => {
                 if debug {
                     println!("STB")
                 }
-                let target_address = emu_ram_32bit[current_address + 1] as usize;
-                emu_ram_32bit[target_address] = reg_b;
+                let target_address = emu_mmio_32bit[current_address + 1] as usize;
+                emu_mmio_32bit[target_address] = reg_b;
                 current_address += 2;
             }
             11 => {
@@ -260,31 +271,31 @@ fn emu_32bit(
                     println!("STBI")
                 }
                 let target_address = reg_c as usize;
-                emu_ram_32bit[target_address] = reg_b;
+                emu_mmio_32bit[target_address] = reg_b;
                 current_address += 1;
             }
             12 => {
                 if debug {
                     println!("STC")
                 }
-                let target_address = emu_ram_32bit[current_address + 1] as usize;
-                emu_ram_32bit[target_address] = reg_c;
+                let target_address = emu_mmio_32bit[current_address + 1] as usize;
+                emu_mmio_32bit[target_address] = reg_c;
                 current_address += 2;
             }
             13 => {
                 if debug {
                     println!("STD")
                 }
-                let target_address = emu_ram_32bit[current_address + 1] as usize;
-                emu_ram_32bit[target_address] = reg_d;
+                let target_address = emu_mmio_32bit[current_address + 1] as usize;
+                emu_mmio_32bit[target_address] = reg_d;
                 current_address += 2;
             }
             14 => {
                 if debug {
                     println!("STE")
                 }
-                let target_address = emu_ram_32bit[current_address + 1] as usize;
-                emu_ram_32bit[target_address] = reg_e;
+                let target_address = emu_mmio_32bit[current_address + 1] as usize;
+                emu_mmio_32bit[target_address] = reg_e;
                 current_address += 2;
             }
             15 => {
@@ -371,7 +382,7 @@ fn emu_32bit(
                 if debug {
                     println!("JMP")
                 }
-                let target_address = emu_ram_32bit[current_address + 1] as usize;
+                let target_address = emu_mmio_32bit[current_address + 1] as usize;
                 emu_stack[emu_stack_pointer] = current_address as u32;
                 emu_stack_pointer += 1;
                 current_address = target_address;
@@ -381,7 +392,7 @@ fn emu_32bit(
                     println!("JMPE")
                 }
                 if reg_d & 1 != 0 {
-                    let target_address = emu_ram_32bit[current_address + 1] as usize;
+                    let target_address = emu_mmio_32bit[current_address + 1] as usize;
                     current_address = target_address;
                 } else {
                     current_address += 2;
@@ -392,7 +403,7 @@ fn emu_32bit(
                     println!("JMPN")
                 }
                 if reg_d & 1 == 0 {
-                    let target_address = emu_ram_32bit[current_address + 1] as usize;
+                    let target_address = emu_mmio_32bit[current_address + 1] as usize;
                     current_address = target_address;
                 } else {
                     current_address += 2;
@@ -403,7 +414,7 @@ fn emu_32bit(
                     println!("JMPG")
                 }
                 if reg_d & 2 != 0 {
-                    let target_address = emu_ram_32bit[current_address + 1] as usize;
+                    let target_address = emu_mmio_32bit[current_address + 1] as usize;
                     current_address = target_address;
                 } else {
                     current_address += 2;
@@ -414,7 +425,7 @@ fn emu_32bit(
                     println!("JMPGU")
                 }
                 if reg_d & 8 != 0 {
-                    let target_address = emu_ram_32bit[current_address + 1] as usize;
+                    let target_address = emu_mmio_32bit[current_address + 1] as usize;
                     current_address = target_address;
                 } else {
                     current_address += 2;
@@ -425,7 +436,7 @@ fn emu_32bit(
                     println!("JMPL")
                 }
                 if reg_d & 4 != 0 {
-                    let target_address = emu_ram_32bit[current_address + 1] as usize;
+                    let target_address = emu_mmio_32bit[current_address + 1] as usize;
                     current_address = target_address;
                 } else {
                     current_address += 2;
@@ -436,7 +447,7 @@ fn emu_32bit(
                     println!("JMPLU")
                 }
                 if reg_d & 16 != 0 {
-                    let target_address = emu_ram_32bit[current_address + 1] as usize;
+                    let target_address = emu_mmio_32bit[current_address + 1] as usize;
                     current_address = target_address;
                 } else {
                     current_address += 2;
@@ -612,10 +623,10 @@ fn emu_32bit(
     println!("Finished Emulation");
 
     if memory_dump_enabled {
-        let dump_end = (memory_dump_start + memory_dump_length).min(emu_ram_32bit.len());
+        let dump_end = (memory_dump_start + memory_dump_length).min(emu_mmio_32bit.len());
         println!("Memory dump [{}..{}]:", memory_dump_start, dump_end);
         for addr in memory_dump_start..dump_end {
-            println!("  [{}] = {}", addr, emu_ram_32bit[addr]);
+            println!("  [{}] = {}", addr, emu_mmio_32bit[addr]);
         }
     }
 
