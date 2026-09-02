@@ -46,6 +46,7 @@ def parse_decimal_literal(token: str) -> int:
     as-is; anything with a decimal point is packed as an IEEE-754
     float bit pattern so FADD/FSUB/FMUL/FDIV can operate on it."""
     text = token.replace("#", "")
+    text = token.replace("&", "")
     if "." in text:
         return struct.unpack(">I", struct.pack(">f", float(text)))[0]
     return int(text)
@@ -112,6 +113,11 @@ for line_num in range(len(assembly_lines)):
             value = parse_decimal_literal(p1[1])
         elif p1[1][0] == "$": # get value from hexadecimal value
             value = int(p1[1].replace("$", ""), 16)
+        elif p1[1][0] == "&": # literal address
+            if p1[1][1:2] == "0x": # Address is encoded in hex:
+                value = int(p1[1].replace("&", ""), 16)
+            else: # Address sis encoded as decimal
+                value = parse_decimal_literal(p1[1])
 
         varibles[name] = {"value": value, "var_num": num_vars}
         num_vars += 1
@@ -173,6 +179,11 @@ for function in labels:
                 data = 0
             elif data[0] == "@": # parameter is label
                 data = 0
+            elif data[0] == "&": # literal address
+                if data[1:2] == "0x": # Address is encoded in hex:
+                    data = int(data[1].replace("&", ""), 16)
+                else: # Address sis encoded as decimal
+                    data = parse_decimal_literal(data)
             else:
                 raise ValueError(f"{data} is not valid in {labels[function]}")
 
@@ -271,6 +282,11 @@ for function in labels:
                 data = varibles[data[1:]]["var_num"] + total_function_len
             elif data[0] == "@": # parameter is label
                 data = resolve_label_operand(mnemonic, data[1:])
+            elif data[0] == "&": # literal address
+                if data[1:2] == "0x": # Address is encoded in hex:
+                    data = int(data[1].replace("&", ""), 16)
+                else: # Address sis encoded as decimal
+                    data = parse_decimal_literal(data)
             else:
                 raise ValueError(f"{data} is not valid in {labels[function]}")
 

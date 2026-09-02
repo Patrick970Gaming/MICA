@@ -155,7 +155,7 @@ fn emu_32bit(
 
     println!("Starting Emulation");
     //let mut emu_running: bool = true;
-    let mut current_address: usize = (ram_size / 2) - 1; //Starting address
+    let mut current_address: usize = 0; //(ram_size / 2) - 1; //Starting address
 
     //registers
     let mut reg_a: u32 = 0;
