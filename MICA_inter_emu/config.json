@@ -6,5 +6,6 @@
   "memory_dump_enabled": true,
   "memory_dump_start": 0,
   "memory_dump_length": 64,
-  "rom_start": 65000
+  "program_rom_start": 33768,
+  "bios_start": 32767
 }

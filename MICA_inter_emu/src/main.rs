@@ -73,7 +73,11 @@ fn main() {
         .as_u64()
         .expect("memory_dump_start missing or not an integer");
 
-    let rom_start: u64 = read_config["memory_dump_length"]
+    let rom_start: u64 = read_config["program_rom_start"]
+        .as_u64()
+        .expect("memory_dump_start missing or not an integer");
+
+    let bios_start: u64 = read_config["bios_start"]
         .as_u64()
         .expect("memory_dump_start missing or not an integer");
     /*
@@ -90,6 +94,7 @@ fn main() {
             memory_dump_start as usize,
             memory_dump_length as usize,
             rom_start as usize,
+            bios_start as usize,
         );
     }
 }
@@ -110,7 +115,7 @@ fn emu_16bit() {
 }
 */
 
-fn load_image_into_mmio(path: &str, ram: &mut [u32], debug: bool) {
+fn load_image_into_mmio(path: &str, ram: &mut [u32], debug: bool, start_addr: usize) {
     let my_buf = BufReader::new(File::open(path).unwrap());
 
     let mut emu_image_raw: Vec<u8> = vec![];
@@ -122,15 +127,15 @@ fn load_image_into_mmio(path: &str, ram: &mut [u32], debug: bool) {
     }
 
     let length_32bit = emu_image_raw.len() / 4;
-    if length_32bit > ram.len() {
+    if start_addr + length_32bit > ram.len() {
         panic!(
-            "Program requires {} words of memory but ram_size is only {} - increase ram_size in config.json",
-            length_32bit, ram.len()
+            "Program requires {} words of memory starting at {} (end {}) but ram_size is only {} - increase ram_size or adjust start_addr in config.json",
+            length_32bit, start_addr, start_addr + length_32bit, ram.len()
         );
     }
 
     let mut counter: usize = 0;
-    for word in ram.iter_mut().take(length_32bit) {
+    for word in ram.iter_mut().skip(start_addr).take(length_32bit) {
         let sec1 = (emu_image_raw[counter] as u32) << 24;
         let sec2 = (emu_image_raw[counter + 1] as u32) << 16;
         let sec3 = (emu_image_raw[counter + 2] as u32) << 8;
@@ -149,13 +154,14 @@ fn emu_32bit(
     memory_dump_start: usize,
     memory_dump_length: usize,
     rom_start: usize,
+    bios_start: usize,
 ) {
     let mut emu_mmio_32bit: Vec<u32> = vec![0; ram_size as usize];
-    load_image_into_mmio("./output32.bin", &mut emu_mmio_32bit, debug);
+    load_image_into_mmio("./output32.bin", &mut emu_mmio_32bit, debug, rom_start);
 
     println!("Starting Emulation");
     //let mut emu_running: bool = true;
-    let mut current_address: usize = 0; //(ram_size / 2) - 1; //Starting address
+    let mut current_address: usize = bios_start;
 
     //registers
     let mut reg_a: u32 = 0;
