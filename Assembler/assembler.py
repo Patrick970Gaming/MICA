@@ -77,6 +77,7 @@ else:
 
 verbose = read_config["verbose"]
 
+rom_start = read_config["rom_start"]
 
 instruct_dict: dict[str, int]  = {}
 for i in range(len(instruct_array)):
@@ -93,22 +94,35 @@ try:
 except FileNotFoundError:
     raise ValueError("Could not find assembly.masm")
 
-assembly_lines = raw_assembly_file.split("\n")
+raw_assembly_lines = raw_assembly_file.split("\n")
 
 
 # remove empty lines from assembly lines
-assembly_lines = [x for x in assembly_lines if x.strip()]
+pre_assembly_lines = [x for x in raw_assembly_lines if x.strip()]
 
-#print(f"Assemly lines {assembly_lines}")
+print(f"pre_assembly lines {pre_assembly_lines}")
 
 #Process varaibles in the assembly and save to a dictonary
 num_vars = 0
 varibles = {}
 
-for line_num in range(len(assembly_lines)):
-    if assembly_lines[line_num][0] == "!":
+print("Remove comments from code")
+
+post_assembly_lines = []
+
+for line in pre_assembly_lines:
+    stripped = line.strip()
+    if stripped[0:2] == "//":
+        print(stripped)  # log/discard comment line
+    else:
+        post_assembly_lines.append(line)
+
+print(f"post processed lines {post_assembly_lines}")
+
+for line_num in range(len(post_assembly_lines)):
+    if post_assembly_lines[line_num][0] == "!":
         value = 0 # sets defualt to 0 so if there is no value for varible defined it defaults to 0
-        p1 = assembly_lines[line_num].replace("!", "").split(" ")
+        p1 = post_assembly_lines[line_num].replace("!", "").split(" ")
         name = p1[0]
         if p1[1][0] == "#": # get value from decimal value
             value = parse_decimal_literal(p1[1])
@@ -132,14 +146,14 @@ class LabelEntry(TypedDict):
 num_lables = 0
 labels: dict[str, LabelEntry] = {}
 
-for line_num in range(len(assembly_lines)):
-    if assembly_lines[line_num][0] == "@":
-        name = assembly_lines[line_num].replace("@", "")
+for line_num in range(len(post_assembly_lines)):
+    if post_assembly_lines[line_num][0] == "@":
+        name = post_assembly_lines[line_num].replace("@", "")
         code: list[str] = []
-        for i in range(line_num + 1, len(assembly_lines)):
-            if assembly_lines[i][0] not in ["@"]:
-                code.append(assembly_lines[i].replace("\t", ""))
-            elif assembly_lines[i][0] in ["@"]:
+        for i in range(line_num + 1, len(post_assembly_lines)):
+            if post_assembly_lines[i][0] not in ["@"]:
+                code.append(post_assembly_lines[i].replace("\t", ""))
+            elif post_assembly_lines[i][0] in ["@"]:
                 break
         if add_halt and name == "main":
             code.append("    HAL")
@@ -276,13 +290,13 @@ for function in labels:
 
             data = splited[1]
             if data[0] == "#": # get value from decimal value (parameter is decimal)
-                data = intern_constant(parse_decimal_literal(data))
+                data = (intern_constant(parse_decimal_literal(data))) + rom_start
             elif data[0] == "$": # get value from hexadecimal value (parameter is hexadecimal)
-                data = intern_constant(int(data.replace("$", ""), 16))
+                data = (intern_constant(int(data.replace("$", ""), 16))) + rom_start
             elif data[0] == "!": # parameter is varaible
-                data = varibles[data[1:]]["var_num"] + total_function_len
+                data = (varibles[data[1:]]["var_num"] + total_function_len) + rom_start
             elif data[0] == "@": # parameter is label
-                data = resolve_label_operand(mnemonic, data[1:])
+                data = (resolve_label_operand(mnemonic, data[1:])) + rom_start
             elif data[0] == "&": # literal address
                 if data[1:2] == "0x": # Address is encoded in hex:
                     data = int(data[1].replace("&", ""), 16)
@@ -295,6 +309,8 @@ for function in labels:
             code_bytes.append((16711680 & data) >> 16)
             code_bytes.append((65280 & data) >> 8)
             code_bytes.append(255 & data)
+
+            print(code_bytes[-4:])
 
             if verbose: print(f"data (processing labels): {data}")
         elif len(splited) == 0 or splited[0] != "":

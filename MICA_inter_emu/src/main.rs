@@ -115,7 +115,13 @@ fn emu_16bit() {
 }
 */
 
-fn load_image_into_mmio(path: &str, ram: &mut [u32], debug: bool, start_addr: usize) {
+fn load_image_into_mmio(
+    path: &str,
+    ram: &mut [u32],
+    debug: bool,
+    start_addr: usize,
+    end_addr: usize,
+) {
     let my_buf = BufReader::new(File::open(path).unwrap());
 
     let mut emu_image_raw: Vec<u8> = vec![];
@@ -127,15 +133,32 @@ fn load_image_into_mmio(path: &str, ram: &mut [u32], debug: bool, start_addr: us
     }
 
     let length_32bit = emu_image_raw.len() / 4;
-    if start_addr + length_32bit > ram.len() {
+
+    // Sanity check the bounds themselves before using them.
+    if end_addr < start_addr {
         panic!(
-            "Program requires {} words of memory starting at {} (end {}) but ram_size is only {} - increase ram_size or adjust start_addr in config.json",
-            length_32bit, start_addr, start_addr + length_32bit, ram.len()
+            "Invalid memory range: end_addr {} is before start_addr {}",
+            end_addr, start_addr
+        );
+    }
+    if end_addr > ram.len() {
+        panic!(
+            "end_addr {} exceeds ram_size {} - increase ram_size or adjust end_addr in config.json",
+            end_addr,
+            ram.len()
+        );
+    }
+
+    let region_size = end_addr - start_addr;
+    if length_32bit > region_size {
+        panic!(
+            "Program requires {} words of memory but the region [{}, {}) only has room for {} - increase the region or reduce the program size",
+            length_32bit, start_addr, end_addr, region_size
         );
     }
 
     let mut counter: usize = 0;
-    for word in ram.iter_mut().skip(start_addr).take(length_32bit) {
+    for word in ram[start_addr..end_addr].iter_mut().take(length_32bit) {
         let sec1 = (emu_image_raw[counter] as u32) << 24;
         let sec2 = (emu_image_raw[counter + 1] as u32) << 16;
         let sec3 = (emu_image_raw[counter + 2] as u32) << 8;
@@ -157,7 +180,21 @@ fn emu_32bit(
     bios_start: usize,
 ) {
     let mut emu_mmio_32bit: Vec<u32> = vec![0; ram_size as usize];
-    load_image_into_mmio("./output32.bin", &mut emu_mmio_32bit, debug, rom_start);
+    load_image_into_mmio(
+        "./output32.bin",
+        &mut emu_mmio_32bit,
+        debug,
+        rom_start,
+        ram_size,
+    );
+
+    load_image_into_mmio(
+        "./micabios32.bin",
+        &mut emu_mmio_32bit,
+        debug,
+        bios_start,
+        rom_start,
+    );
 
     println!("Starting Emulation");
     //let mut emu_running: bool = true;
@@ -198,7 +235,11 @@ fn emu_32bit(
                 let target_address = emu_mmio_32bit[current_address + 1] as usize;
                 reg_a = emu_mmio_32bit[target_address];
                 current_address += 2;
-                //println!("{}", current_address)
+                if debug {
+                    println!("reg_a = {}", reg_a);
+                    println!("Target address: {}", target_address);
+                    println!("Data at target address: {}", target_address);
+                }
             }
             2 => {
                 if debug {
@@ -207,6 +248,11 @@ fn emu_32bit(
                 let target_address = reg_c as usize;
                 reg_a = emu_mmio_32bit[target_address];
                 current_address += 1;
+                if debug {
+                    println!("reg_a = {}", reg_a);
+                    println!("Target address: {}", target_address);
+                    println!("Data at target address: {}", emu_mmio_32bit[target_address]);
+                }
             }
             3 => {
                 if debug {
@@ -215,6 +261,10 @@ fn emu_32bit(
                 let target_address = emu_mmio_32bit[current_address + 1] as usize;
                 reg_b = emu_mmio_32bit[target_address];
                 current_address += 2;
+                if debug {
+                    println!("Target address: {}", target_address);
+                    println!("Data at target address: {}", emu_mmio_32bit[target_address]);
+                };
             }
             4 => {
                 if debug {
@@ -231,6 +281,11 @@ fn emu_32bit(
                 let target_address = emu_mmio_32bit[current_address + 1] as usize;
                 reg_c = emu_mmio_32bit[target_address];
                 current_address += 2;
+                if debug {
+                    println!("reg_c = {}", reg_c);
+                    println!("Target address: {}", target_address);
+                    println!("Data at target address: {}", emu_mmio_32bit[target_address]);
+                };
             }
             6 => {
                 if debug {
@@ -255,6 +310,11 @@ fn emu_32bit(
                 let target_address = emu_mmio_32bit[current_address + 1] as usize;
                 emu_mmio_32bit[target_address] = reg_a;
                 current_address += 2;
+                if debug {
+                    println!("reg_a = {}", reg_a);
+                    println!("Target address: {}", target_address);
+                    println!("Data at target address: {}", emu_mmio_32bit[target_address]);
+                }
             }
             9 => {
                 if debug {
@@ -263,6 +323,11 @@ fn emu_32bit(
                 let target_address = reg_c as usize;
                 emu_mmio_32bit[target_address] = reg_a;
                 current_address += 1;
+                if debug {
+                    println!("reg_a = {}", reg_a);
+                    println!("Target address: {}", target_address);
+                    println!("Data at target address: {}", emu_mmio_32bit[target_address]);
+                }
             }
             10 => {
                 if debug {
@@ -287,6 +352,11 @@ fn emu_32bit(
                 let target_address = emu_mmio_32bit[current_address + 1] as usize;
                 emu_mmio_32bit[target_address] = reg_c;
                 current_address += 2;
+                if debug {
+                    println!("reg_c = {}", reg_c);
+                    println!("Target address: {}", target_address);
+                    println!("Data at target address: {}", emu_mmio_32bit[target_address]);
+                };
             }
             13 => {
                 if debug {

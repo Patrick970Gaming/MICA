@@ -1,6 +1,30 @@
+!counter #0
+!current_address #33768
+!rom_end #65536
+
 @main
-    LDA #69
-    LDB #420
-    LDA &8
-    STA &7
-    LDA &7
+    //Store value from address to target
+    LDC !current_address
+    LDAI
+    LDC !counter
+    STAI
+
+    //increment counter
+    LDA !counter
+    LDB #1
+    ADD
+    STC !counter
+
+    //increment current_address
+    LDA !current_address
+    LDB #1
+    ADD
+    STC !current_address
+
+    // Check if done
+    LDA !current_address
+    LDB !rom_end
+    CMP
+
+    // Loop if not
+    JMPN @main
