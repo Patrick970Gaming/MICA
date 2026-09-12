@@ -2,6 +2,7 @@ use serde_json::Value;
 use std::fs::File;
 use std::io::BufReader;
 use std::io::Read;
+use std::time::Instant;
 use yansi::Paint;
 
 //const MAX_16BIT_NUM: u32 = 65_535;
@@ -80,6 +81,10 @@ fn main() {
     let bios_start: u64 = read_config["bios_start"]
         .as_u64()
         .expect("memory_dump_start missing or not an integer");
+
+    let benchmark = read_config["benchmark"]
+        .as_bool()
+        .expect("memory_dump_start missing or not an integer");
     /*
     if emu_bitwidth == 16 {
         emu_16bit();
@@ -95,6 +100,7 @@ fn main() {
             memory_dump_length as usize,
             rom_start as usize,
             bios_start as usize,
+            benchmark as bool,
         );
     }
 }
@@ -178,6 +184,7 @@ fn emu_32bit(
     memory_dump_length: usize,
     rom_start: usize,
     bios_start: usize,
+    benchmark: bool,
 ) {
     let mut emu_mmio_32bit: Vec<u32> = vec![0; ram_size as usize];
     load_image_into_mmio(
@@ -210,6 +217,10 @@ fn emu_32bit(
     //stack
     let mut emu_stack_pointer: usize = 0;
     let mut emu_stack: [u32; STACK_SIZE] = [0; STACK_SIZE];
+
+    //benchmark varibles
+    let mut cycle_count: u64 = 0;
+    let start = Instant::now();
 
     loop {
         if current_address >= ram_size {
@@ -695,7 +706,21 @@ fn emu_32bit(
         }
         //thread::sleep(time::Duration::from_millis(100));
         //current_address += 1;
+        if benchmark {
+            cycle_count += 1;
+        }
     }
+
+    let elapsed = start.elapsed();
+
+    if benchmark {
+        let cycles_per_sec = cycle_count as f64 / elapsed.as_secs_f64();
+        println!(
+            "Cycles per second: {}",
+            format_cycles_per_sec(cycles_per_sec)
+        );
+    }
+
     println!("Finished Emulation");
 
     if memory_dump_enabled {
@@ -713,4 +738,16 @@ fn emu_32bit(
     println!("regd: {}", reg_d);
     println!("rege: {}", reg_e);
     println!("rege: {}", reg_e);
+}
+
+fn format_cycles_per_sec(cycles_per_sec: f64) -> String {
+    if cycles_per_sec >= 1_000_000_000.0 {
+        format!("{:.2} B/s", cycles_per_sec / 1_000_000_000.0)
+    } else if cycles_per_sec >= 1_000_000.0 {
+        format!("{:.2} M/s", cycles_per_sec / 1_000_000.0)
+    } else if cycles_per_sec >= 1_000.0 {
+        format!("{:.2} K/s", cycles_per_sec / 1_000.0)
+    } else {
+        format!("{:.2} /s", cycles_per_sec)
+    }
 }
